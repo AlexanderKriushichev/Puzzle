@@ -7,10 +7,14 @@ public class Crystal : MonoBehaviour {
     public TypeOfCrystal type;
     private SpriteRenderer spriteRenderer;
 
+    public Sprite[] spritesOfCrystal = new Sprite[4];
+
+
 	// Use this for initialization
 	void Start () {
         //SetRandomType();
         //SwitchColor();
+        spriteRenderer = GetComponent<SpriteRenderer>();
 	}
 
     
@@ -51,28 +55,41 @@ public class Crystal : MonoBehaviour {
         }
     }
 
+    //public void SetType(TypeOfCrystal typeOfCrystal);
+
     public void SetRandomType()
     {
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+
+
         switch (Random.Range(0, 4))
         {
             case 0:
                 {
                     type = TypeOfCrystal.Red;
+                    spriteRenderer.sprite = spritesOfCrystal[0];
                     break;
                 }
             case 1:
                 {
                     type = TypeOfCrystal.Blue;
+                    spriteRenderer.sprite = spritesOfCrystal[1];
+
                     break;
                 }
             case 2:
                 {
                     type = TypeOfCrystal.Green;
+                    spriteRenderer.sprite = spritesOfCrystal[2];
+
                     break;
                 }
             case 3:
                 {
                     type = TypeOfCrystal.Yellow;
+                    spriteRenderer.sprite = spritesOfCrystal[3];
+
                     break;
                 }
         }

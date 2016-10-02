@@ -274,7 +274,7 @@ public class Cell : MonoBehaviour {
             GameObject initCell = (GameObject)Instantiate(gameField.crystalPrefab, gameObject.transform);
             crystal = initCell.GetComponent<Crystal>();
             crystal.SetRandomType();
-            crystal.SwitchColor();
+            //crystal.SwitchColor();
             crystal.transform.position = gameObject.transform.position + new Vector3(0,1,0);
             crystal.transform.DOMove(gameObject.transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
             isCrystalMove = true;

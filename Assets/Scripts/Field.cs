@@ -12,6 +12,7 @@ public class Field : MonoBehaviour {
 
     public static bool isCrystalMove;
 
+
 	// Use this for initialization
 	void Start () {
 
@@ -21,7 +22,7 @@ public class Field : MonoBehaviour {
             
             GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
             initCell.GetComponent<Crystal>().SetRandomType();
-            initCell.GetComponent<Crystal>().SwitchColor();
+            //initCell.GetComponent<Crystal>().SwitchColor();
             cells[cell.x, cell.y].crystal = initCell.GetComponent<Crystal>();
             cells[cell.x, cell.y].crystal.transform.position = cells[cell.x, cell.y].transform.position + new Vector3(0, 1, 0);
             cells[cell.x, cell.y].crystal.transform.DOMove(cells[cell.x, cell.y].transform.position, 0.5f).OnComplete(delegate { ResetCrystalMove(); });
