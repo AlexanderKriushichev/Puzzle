@@ -10,6 +10,8 @@ public class Field : MonoBehaviour {
 
     public GameObject crystalPrefab;
 
+    public static bool isCrystalMove;
+
 	// Use this for initialization
 	void Start () {
 
@@ -49,7 +51,7 @@ public class Field : MonoBehaviour {
     }
 
 
-    bool CheckMove()
+    public bool CheckMove()
     {
         foreach (Cell cell in cells)
         {

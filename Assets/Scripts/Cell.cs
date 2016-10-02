@@ -22,9 +22,76 @@ public class Cell : MonoBehaviour {
 
     public bool isAddInList;
 
+    private Vector2 startPositionOfMouse;
+
+
     void Start()
     {
         
+    }
+
+    void OnMouseDown()
+    {
+        startPositionOfMouse = Input.mousePosition;
+    }
+
+    void OnMouseUp()
+    {
+
+        if (!gameField.CheckMove())
+            return;
+
+        Vector2 endPositionOfMouse = Input.mousePosition;
+        Vector2 moveVector = endPositionOfMouse - startPositionOfMouse;
+        if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
+        {
+            if (moveVector.x > 0)
+            {
+                if (x + 1 < 8)
+                {
+                    ExchangeCrystal(gameField.cells[x + 1, y]);
+                }
+            }
+            else
+            {
+                if (x - 1 >= 0)
+                {
+                    ExchangeCrystal(gameField.cells[x - 1, y]);
+                }
+            }
+        }
+        else
+        {
+            if (moveVector.y > 0)
+            {
+                if (y - 1 >= 0)
+                {
+                    ExchangeCrystal(gameField.cells[x, y - 1]);
+                }
+            }
+            else
+            {
+                if (y + 1 < 8)
+                {
+                    ExchangeCrystal(gameField.cells[x, y + 1]);
+                }
+            }
+
+        }
+    }
+
+    public void ExchangeCrystal(Cell target)
+    {
+        isCrystalMove = true;
+
+        crystal.transform.DOMove(target.transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
+        target.crystal.transform.DOMove(transform.position, 0.5f);
+
+        Crystal obm;
+
+        obm = crystal;
+        crystal = target.crystal;
+        target.crystal = obm;
     }
 
     public List<Cell> CheckAdjacentCells()

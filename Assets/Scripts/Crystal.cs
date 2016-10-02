@@ -12,10 +12,14 @@ public class Crystal : MonoBehaviour {
         //SetRandomType();
         //SwitchColor();
 	}
-	
+
+    
+
 	// Update is called once per frame
 	void Update () {
-	
+
+
+
 	}
 
     public void SwitchColor()
