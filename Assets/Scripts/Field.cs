@@ -7,7 +7,7 @@ using DG.Tweening;
 public class Field : MonoBehaviour {
 
     public Cell[,] cells = new Cell[8,8];
-
+    
     public GameObject crystalPrefab;
 
     public static bool isCrystalMove;
@@ -21,7 +21,7 @@ public class Field : MonoBehaviour {
             cells[cell.x, cell.y] = cell;
             
             GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
-            initCell.GetComponent<Crystal>().SetRandomType();
+            initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x,cell.y));
             //initCell.GetComponent<Crystal>().SwitchColor();
             cells[cell.x, cell.y].crystal = initCell.GetComponent<Crystal>();
             cells[cell.x, cell.y].crystal.transform.position = cells[cell.x, cell.y].transform.position + new Vector3(0, 1, 0);
@@ -88,4 +88,22 @@ public class Field : MonoBehaviour {
 
         Reset();
 	}
+
+    /// <summary>
+    /// Генерация массива с цифровыми кодами цветов ячеек
+    /// </summary>
+    private int GenerateColor(int x, int y)
+    {
+        List<int> colorList = new List<int> { 0, 1, 2, 3 };
+        if ((x > 1) && (cells[x - 1, y].crystal.colorID == cells[x - 2, y].crystal.colorID))
+        {
+            colorList.Remove(cells[x - 1, y].crystal.colorID);
+        }
+        if ((y > 1) && (cells[x, y - 1].crystal.colorID == cells[x, y - 2].crystal.colorID))
+        {
+            colorList.Remove(cells[x, y - 1].crystal.colorID);
+        }
+        int newColor = Random.Range(0, colorList.Count);
+        return colorList[newColor];
+    }
 }
