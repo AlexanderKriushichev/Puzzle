@@ -89,8 +89,8 @@ public class Cell : MonoBehaviour {
       
         if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
         {
-            crystal.transform.DOMove(target.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
-            target.crystal.transform.DOMove(transform.position, 0.5f).SetEase(Ease.Linear);
+            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(delegate { isCrystalMove = false; });
+            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
 
             Crystal obm;
             obm = crystal;
@@ -99,8 +99,8 @@ public class Cell : MonoBehaviour {
         }
         else
         {
-            crystal.transform.DOMove(target.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { ReturnCrystal(target); });
-            target.crystal.transform.DOMove(transform.position, 0.5f).SetEase(Ease.Linear);
+            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(delegate { ReturnCrystal(target); });
+            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
         }
     }
 
@@ -290,28 +290,35 @@ public class Cell : MonoBehaviour {
         return nearbyCells;
     }
 
+    
 	void Update () {
 
-        if (isCellGenerate && crystal == null && !isCrystalMove)
+        if (isCellGenerate && crystal == null )
         {
-            GameObject initCell = (GameObject)Instantiate(gameField.crystalPrefab, gameObject.transform);
-            crystal = initCell.GetComponent<Crystal>();
-            crystal.SetRandomType();
-            //crystal.SwitchColor();
-            crystal.transform.position = gameObject.transform.position + new Vector3(0,1,0);
-            crystal.transform.DOMove(gameObject.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
-            isCrystalMove = true;
+            int countOfCrystal = 1;
+            while (crystal == null)
+            {
+                GameObject initCell = (GameObject)Instantiate(gameField.crystalPrefab, gameObject.transform);
+                Cell emptyCell = gameField.GetEmptyCell(x, y);
+                emptyCell.crystal = initCell.GetComponent<Crystal>();
+                emptyCell.crystal.SetRandomType();
+                //crystal.SwitchColor();
+                emptyCell.crystal.transform.position = gameObject.transform.position + new Vector3(0, 1 * countOfCrystal, 0);
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(delegate { emptyCell.isCrystalMove = false; });
+                countOfCrystal++;
+            }            
         }
 
-        if (crystal == null && !isCrystalMove)
+        if (crystal == null && !isCrystalMove && !isCellGenerate)
         {
             if (gameField.cells[x, y - 1].crystal != null && !gameField.cells[x, y - 1].isCrystalMove)
             {
-                crystal = gameField.cells[x, y - 1].crystal;
-                crystal.transform.parent = gameObject.transform;
-                crystal.transform.DOMove(gameObject.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
+                Cell emptyCell = gameField.GetEmptyCell(x, y);
+                emptyCell.crystal = gameField.cells[x, y - 1].crystal;
+                emptyCell.crystal.transform.parent = gameObject.transform;
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(delegate { emptyCell.isCrystalMove = false; });
                 gameField.cells[x, y - 1].crystal = null;
-                isCrystalMove = true;
+                emptyCell.isCrystalMove = true;
             }
         }
 	}

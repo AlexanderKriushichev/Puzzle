@@ -95,6 +95,25 @@ public class Field : MonoBehaviour {
         return false;
     }
 
+    /// <summary>
+    /// Проверка на свободное место
+    /// </summary>
+    /// <param name="x">X</param>
+    /// <param name="y">Y</param>
+    /// <returns>Положение пустого места</returns>
+    public Cell GetEmptyCell(int x, int y)
+    {
+        if (y + 1 > 7) return cells[x, y];
+        if (cells[x, y + 1].crystal == null)
+        {
+            return GetEmptyCell(x, y + 1);
+        }
+        else
+        {
+            return cells[x, y];
+        }
+    }
+
 	// Update is called once per frame
 	void Update () {
 
