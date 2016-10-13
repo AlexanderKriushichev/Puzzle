@@ -43,6 +43,27 @@ public class Field : MonoBehaviour {
         }
     }
 
+    public void MoveCrystals()
+    {
+        
+        bool f = false;
+        while (!f)
+        {
+            bool move = true;
+            foreach (Cell cell in cells)
+            {
+                if (cell.crystal == null)
+                {
+                    cell.CrystalMove();
+                    Debug.Log(1);
+                    move = false;
+                    break;
+                }
+            }
+            f = move;
+        }
+    }
+
     void ResetCrystalMove()
     {
         foreach (Cell cell in cells)
@@ -114,9 +135,182 @@ public class Field : MonoBehaviour {
         }
     }
 
-	// Update is called once per frame
-	void Update () {
+    /// <summary>
+    /// Выводит список клеток в комбинации
+    /// </summary>
+    /// <param name="x">Х</param>
+    /// <param name="y">Y</param>
+    /// <returns>Список клеток</returns>
+    public List<Cell> GetAdjacentCells(int x, int y)
+    {
+        cells[x,y].isChecked = true;
+        List<Cell> nearbyCells = new List<Cell>();
+        if (cells[x,y].isCrystalMove)
+            return nearbyCells;
+        if (cells[x,y].crystal == null)
+            return nearbyCells;
+        if (x > 0 && x < 7)
+        {
+            if (cells[x - 1, y].crystal != null && cells[x + 1, y].crystal != null)
+            {
+                if (cells[x - 1, y].crystal.type == cells[x,y].crystal.type && cells[x + 1, y].crystal.type == cells[x,y].crystal.type && !cells[x - 1, y].isCrystalMove && !cells[x + 1, y].isCrystalMove)
+                {
+                    if (!cells[x, y].isAddInList)
+                    {
+                        cells[x, y].isAddInList = true;
+                        nearbyCells.Add(cells[x, y]);
+                    }
+                    if (!cells[x - 1, y].isAddInList)
+                    {
+                        nearbyCells.Add(cells[x - 1, y]);
+                    }
+                    if (!cells[x + 1, y].isAddInList)
+                    {
+                        nearbyCells.Add(cells[x + 1, y]);
+                    }
+                    if (!cells[x - 1, y].isChecked)
+                    {
+                        nearbyCells.AddRange(GetAdjacentCells(x-1,y));
+                    }
+                    if (!cells[x + 1, y].isChecked)
+                    {
+                        nearbyCells.AddRange(GetAdjacentCells(x + 1, y));
+                    }
+                }
+                else
+                {
+                    if (cells[x - 1, y].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x - 1, y].isChecked)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y));
+                        }
+                    }
+                    if (cells[x + 1, y].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x + 1, y].isChecked)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y));
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (x > 0)
+            {
+                if (cells[x - 1, y].crystal != null)
+                {
+                    if (cells[x - 1, y].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x - 1, y].isChecked && !cells[x - 1, y].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y));
+                        }
+                    }
+                }
+            }
+            if (x < 7)
+            {
+                if (cells[x + 1, y].crystal != null)
+                {
+                    if (cells[x + 1, y].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x + 1, y].isChecked && !cells[x + 1, y].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y));
+                        }
+                    }
+                }
+            }
+        }
+        if (y > 0 && y < 7)
+        {
+            if ((cells[x, y - 1].crystal != null && cells[x, y + 1].crystal != null && !cells[x, y + 1].isCrystalMove && !cells[x, y - 1].isCrystalMove))
+            {
+                if (cells[x, y - 1].crystal.type == cells[x, y].crystal.type && cells[x, y + 1].crystal.type == cells[x, y].crystal.type)
+                {
+                    if (!cells[x, y].isAddInList)
+                    {
+                        cells[x, y].isAddInList = true;
+                        nearbyCells.Add(cells[x, y]);
+                    }
+                    if (!cells[x, y - 1].isAddInList)
+                    {
+                        nearbyCells.Add(cells[x, y - 1]);
+                    }
+                    if (!cells[x, y + 1].isAddInList)
+                    {
+                        nearbyCells.Add(cells[x, y + 1]);
+                    }
+                    if (!cells[x, y - 1].isChecked)
+                    {
 
+                        nearbyCells.AddRange(GetAdjacentCells(x, y - 1));
+                    }
+                    if (!cells[x, y + 1].isChecked)
+                    {
+
+                        nearbyCells.AddRange(GetAdjacentCells(x, y + 1));
+                    }
+                }
+                else
+                {
+                    if (cells[x, y - 1].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x, y - 1].isChecked && !cells[x, y - 1].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1));
+                        }
+                    }
+                    if (cells[x, y + 1].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x, y + 1].isChecked && !cells[x, y + 1].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1));
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (y > 0)
+            {
+                if (cells[x, y - 1].crystal != null)
+                {
+                    if (cells[x, y - 1].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x, y - 1].isChecked && !cells[x, y - 1].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1));
+                        }
+                    }
+                }
+            }
+            if (y < 7)
+            {
+                if (cells[x, y + 1].crystal != null)
+                {
+                    if (cells[x, y + 1].crystal.type == cells[x, y].crystal.type)
+                    {
+                        if (!cells[x, y + 1].isChecked && !cells[x, y + 1].isCrystalMove)
+                        {
+                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1));
+                        }
+                    }
+                }
+            }
+        }
+        return nearbyCells;
+    }
+
+    /// <summary>
+    /// Уничтожение кристалов
+    /// </summary>
+    public void DestroyCrystal()
+    {
         if (!CheckMove())
         {
             return;
@@ -129,17 +323,20 @@ public class Field : MonoBehaviour {
             for (int j = 0; j < 8; j++)
             {
                 if (!cells[i, j].isChecked && !cells[i, j].isCrystalMove)
-                    nearbyCells.AddRange(cells[i, j].CheckAdjacentCells());
+                    nearbyCells.AddRange(GetAdjacentCells(i,j));
             }
         }
 
         foreach (Cell destroyCell in nearbyCells)
         {
             Destroy(destroyCell.crystal.gameObject);
+            destroyCell.crystal = null;
         }
-
         Reset();
-	}
+        //ResetCrystalMove();
+        //MoveCrystals();
+
+    }
 
     /// <summary>
     /// Генерация массива с цифровыми кодами цветов ячеек

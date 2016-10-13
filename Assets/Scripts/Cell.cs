@@ -89,7 +89,7 @@ public class Cell : MonoBehaviour {
       
         if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
         {
-            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(delegate { isCrystalMove = false; });
+            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
             target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
 
             Crystal obm;
@@ -99,7 +99,7 @@ public class Cell : MonoBehaviour {
         }
         else
         {
-            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(delegate { ReturnCrystal(target); });
+            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
             target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
         }
     }
@@ -112,188 +112,23 @@ public class Cell : MonoBehaviour {
     {
         isCrystalMove = true;
 
-        crystal.transform.DOMove(transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
+        crystal.transform.DOMove(transform.position, 0.5f).OnComplete(EndMove);
         target.crystal.transform.DOMove(target.transform.position, 0.5f);
 
     }
 
-    public List<Cell> CheckAdjacentCells()
+    private void EndMove()
     {
-        isChecked = true;
-        List<Cell> nearbyCells = new List<Cell>();
-        if (isCrystalMove)
-            return nearbyCells;
-        if (crystal == null)
-            return nearbyCells;
-        if (x > 0 && x < 7)
-        {
-            if (gameField.cells[x - 1, y].crystal != null && gameField.cells[x + 1, y].crystal != null)
-            {
-                if (gameField.cells[x - 1, y].crystal.type == crystal.type && gameField.cells[x + 1, y].crystal.type == crystal.type && !gameField.cells[x - 1, y].isCrystalMove && !gameField.cells[x + 1, y].isCrystalMove)
-                {
-                    if (!isAddInList)
-                    {
-                        isAddInList = true;
-                        nearbyCells.Add(gameField.cells[x, y]);
-                    }
-                    if (!gameField.cells[x - 1, y].isAddInList)
-                    {
-                        nearbyCells.Add(gameField.cells[x - 1, y]);
-                    }
-                    if (!gameField.cells[x + 1, y].isAddInList)
-                    {
-                        nearbyCells.Add(gameField.cells[x + 1, y]);
-                    }
-                    if (!gameField.cells[x - 1, y].isChecked)
-                    {
-                        nearbyCells.AddRange(gameField.cells[x - 1, y].CheckAdjacentCells());
-                    }
-                    if (!gameField.cells[x + 1, y].isChecked)
-                    {
-                        nearbyCells.AddRange(gameField.cells[x + 1, y].CheckAdjacentCells());
-                    }
-                }
-                else
-                {
-                    if (gameField.cells[x - 1, y].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x - 1, y].isChecked)
-                        {
-                            nearbyCells.AddRange(gameField.cells[x - 1, y].CheckAdjacentCells());
-                        }
-                    }
-                    if (gameField.cells[x + 1, y].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x + 1, y].isChecked)
-                        {
-                            nearbyCells.AddRange(gameField.cells[x + 1, y].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (x > 0)
-            {
-                if (gameField.cells[x - 1, y].crystal != null)
-                {
-                    if (gameField.cells[x - 1, y].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x - 1, y].isChecked && !gameField.cells[x - 1, y].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x - 1, y].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-            if (x < 7)
-            {
-                if (gameField.cells[x + 1, y].crystal != null)
-                {
-                    if (gameField.cells[x + 1, y].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x + 1, y].isChecked && !gameField.cells[x + 1, y].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x + 1, y].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-        }
-        if (y > 0 && y < 7)
-        {
-            if ((gameField.cells[x, y - 1].crystal != null && gameField.cells[x, y + 1].crystal != null && !gameField.cells[x, y + 1].isCrystalMove && !gameField.cells[x, y - 1].isCrystalMove))
-            {
-                if (gameField.cells[x, y - 1].crystal.type == crystal.type && gameField.cells[x, y + 1].crystal.type == crystal.type)
-                {
-                    if (!isAddInList)
-                    {
-                        isAddInList = true;
-                        nearbyCells.Add(gameField.cells[x, y]);
-                    }
-                    if (!gameField.cells[x, y - 1].isAddInList)
-                    {
-                        nearbyCells.Add(gameField.cells[x, y - 1]);
-                    }
-                    if (!gameField.cells[x, y + 1].isAddInList)
-                    {
-                        nearbyCells.Add(gameField.cells[x, y + 1]);
-                    }
-                    if (!gameField.cells[x, y - 1].isChecked)
-                    {
-
-                        nearbyCells.AddRange(gameField.cells[x, y - 1].CheckAdjacentCells());
-                    }
-                    if (!gameField.cells[x, y + 1].isChecked)
-                    {
-
-                        nearbyCells.AddRange(gameField.cells[x, y + 1].CheckAdjacentCells());
-                    }
-                }
-                else
-                {
-                    if (gameField.cells[x, y - 1].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x, y - 1].isChecked && !gameField.cells[x, y - 1].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x, y - 1].CheckAdjacentCells());
-                        }
-                    }
-                    if (gameField.cells[x, y + 1].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x, y + 1].isChecked && !gameField.cells[x, y + 1].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x, y + 1].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (y > 0)
-            {
-                if (gameField.cells[x, y - 1].crystal != null)
-                {
-                    if (gameField.cells[x, y - 1].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x, y - 1].isChecked && !gameField.cells[x, y - 1].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x, y - 1].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-            if (y < 7)
-            {
-                if (gameField.cells[x, y + 1].crystal != null)
-                {
-                    if (gameField.cells[x, y + 1].crystal.type == crystal.type)
-                    {
-                        if (!gameField.cells[x, y + 1].isChecked && !gameField.cells[x, y + 1].isCrystalMove)
-                        {
-                            //nearbyCells.Add(gameField.cells[x, y]);
-                            nearbyCells.AddRange(gameField.cells[x, y + 1].CheckAdjacentCells());
-                        }
-                    }
-                }
-            }
-        }
-
-        //isChecked = false;
-        return nearbyCells;
+        isCrystalMove = false;
+        gameField.DestroyCrystal();
     }
 
-    
-	void Update () {
-
-        if (isCellGenerate && crystal == null )
+    /// <summary>
+    /// Перемещение кристалов
+    /// </summary>
+    public void CrystalMove()
+    {
+        if (isCellGenerate && crystal == null)
         {
             int countOfCrystal = 1;
             while (crystal == null)
@@ -304,9 +139,9 @@ public class Cell : MonoBehaviour {
                 emptyCell.crystal.SetRandomType();
                 //crystal.SwitchColor();
                 emptyCell.crystal.transform.position = gameObject.transform.position + new Vector3(0, 1 * countOfCrystal, 0);
-                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(delegate { emptyCell.isCrystalMove = false; });
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(emptyCell.EndMove);
                 countOfCrystal++;
-            }            
+            }
         }
 
         if (crystal == null && !isCrystalMove && !isCellGenerate)
@@ -316,10 +151,16 @@ public class Cell : MonoBehaviour {
                 Cell emptyCell = gameField.GetEmptyCell(x, y);
                 emptyCell.crystal = gameField.cells[x, y - 1].crystal;
                 emptyCell.crystal.transform.parent = gameObject.transform;
-                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(delegate { emptyCell.isCrystalMove = false; });
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(emptyCell.EndMove);
                 gameField.cells[x, y - 1].crystal = null;
                 emptyCell.isCrystalMove = true;
             }
         }
-	}
+    }
+
+    
+    void Update () {
+
+        CrystalMove();
+    }
 }

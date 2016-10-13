@@ -33,14 +33,6 @@ public class Crystal : MonoBehaviour {
 	}
 
     
-
-	// Update is called once per frame
-	void Update () {
-
-
-
-	}
-
     /// <summary>
     /// Смена цвета кристалла
     /// </summary>
