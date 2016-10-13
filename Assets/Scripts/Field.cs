@@ -62,6 +62,39 @@ public class Field : MonoBehaviour {
         return true;
     }
 
+    /// <summary>
+    /// Проверка на комбинацию
+    /// </summary>
+    /// <param name="x">Координата Х</param>
+    /// <param name="y">Координата Y</param>
+    /// <param name="typeOfCrystal">Тип кристала</param>
+    /// Возвращает true если есть комбинация, иначе false
+    /// <returns></returns>
+    public bool CheckNearCombination(int x, int y, Cell target)
+    {
+        if (x > 1)
+            if (cells[x - 1, y].crystal.type == target.crystal.type && cells[x - 2, y].crystal.type == target.crystal.type && cells[x - 1, y] != target)
+                return true;
+        if (x > 0 && x < 7)
+            if (cells[x - 1, y].crystal.type == target.crystal.type && cells[x + 1, y].crystal.type == target.crystal.type && cells[x - 1, y] != target && cells[x + 1, y] != target)
+                return true;
+        if (x < 6)
+            if (cells[x + 1, y].crystal.type == target.crystal.type && cells[x + 2, y].crystal.type == target.crystal.type && cells[x + 1, y] != target)
+                return true;
+
+        if (y > 1)
+            if (cells[x, y - 1].crystal.type == target.crystal.type && cells[x, y - 2].crystal.type == target.crystal.type && cells[x, y - 1] != target)
+                return true;
+        if (y > 0 && y < 7)
+            if (cells[x, y - 1].crystal.type == target.crystal.type && cells[x, y + 1].crystal.type == target.crystal.type && cells[x, y - 1] != target && cells[x, y + 1] != target)
+                return true;
+        if (y < 6)
+            if (cells[x, y + 1].crystal.type == target.crystal.type && cells[x, y + 2].crystal.type == target.crystal.type && cells[x, y + 1] != target)
+                return true;
+
+        return false;
+    }
+
 	// Update is called once per frame
 	void Update () {
 

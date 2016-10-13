@@ -37,7 +37,6 @@ public class Cell : MonoBehaviour {
 
     void OnMouseUp()
     {
-
         if (!gameField.CheckMove())
             return;
 
@@ -80,18 +79,42 @@ public class Cell : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// Меняет местами клетки
+    /// </summary>
+    /// <param name="target">Клетка</param>
     public void ExchangeCrystal(Cell target)
     {
         isCrystalMove = true;
+      
+        if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
+        {
+            crystal.transform.DOMove(target.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
+            target.crystal.transform.DOMove(transform.position, 0.5f).SetEase(Ease.Linear);
 
-        crystal.transform.DOMove(target.transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
-        target.crystal.transform.DOMove(transform.position, 0.5f);
+            Crystal obm;
+            obm = crystal;
+            crystal = target.crystal;
+            target.crystal = obm;
+        }
+        else
+        {
+            crystal.transform.DOMove(target.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { ReturnCrystal(target); });
+            target.crystal.transform.DOMove(transform.position, 0.5f).SetEase(Ease.Linear);
+        }
+    }
 
-        Crystal obm;
+    /// <summary>
+    /// Возвращает помененые клетки обратно на места
+    /// </summary>
+    /// <param name="target">Клатка</param>
+    private void ReturnCrystal(Cell target)
+    {
+        isCrystalMove = true;
 
-        obm = crystal;
-        crystal = target.crystal;
-        target.crystal = obm;
+        crystal.transform.DOMove(transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
+        target.crystal.transform.DOMove(target.transform.position, 0.5f);
+
     }
 
     public List<Cell> CheckAdjacentCells()
@@ -276,7 +299,7 @@ public class Cell : MonoBehaviour {
             crystal.SetRandomType();
             //crystal.SwitchColor();
             crystal.transform.position = gameObject.transform.position + new Vector3(0,1,0);
-            crystal.transform.DOMove(gameObject.transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
+            crystal.transform.DOMove(gameObject.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
             isCrystalMove = true;
         }
 
@@ -286,7 +309,7 @@ public class Cell : MonoBehaviour {
             {
                 crystal = gameField.cells[x, y - 1].crystal;
                 crystal.transform.parent = gameObject.transform;
-                crystal.transform.DOMove(gameObject.transform.position, 0.5f).OnComplete(delegate { isCrystalMove = false; });
+                crystal.transform.DOMove(gameObject.transform.position, 0.5f).SetEase(Ease.Linear).OnComplete(delegate { isCrystalMove = false; });
                 gameField.cells[x, y - 1].crystal = null;
                 isCrystalMove = true;
             }
