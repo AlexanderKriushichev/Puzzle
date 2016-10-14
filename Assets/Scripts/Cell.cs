@@ -99,7 +99,7 @@ public class Cell : MonoBehaviour {
         }
         else
         {
-            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
+            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(() => ReturnCrystal(target));
             target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
         }
     }

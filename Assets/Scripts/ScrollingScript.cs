@@ -8,173 +8,161 @@ using UnityEngine;
 /// </summary>
 public class ScrollingScript : MonoBehaviour
 {
-  /// <summary>
-  /// Scrolling speed
-  /// </summary>
-  public Vector2 speed = new Vector2(10, 10);
+    /// <summary>
+    /// Скорость перемещения 
+    /// </summary>
+    public float speed = 1;
 
-  /// <summary>
-  /// Moving direction
-  /// </summary>
-  public Vector2 direction = new Vector2(-1, 0);
+    /// <summary>
+    /// Направление перемещения
+    /// </summary>
+    public DirectionType direction = DirectionType.left;
 
-  /// <summary>
-  /// Movement should be applied to camera
-  /// </summary>
-  public bool isLinkedToCamera = false;
+    /// <summary>
+    /// Список префабов фонов
+    /// </summary>
+    public List<GameObject> backGroundPrefab;
 
-  /// <summary>
-  /// Background is inifnite
-  /// </summary>
-  public bool isLooping = false;
+    /// <summary>
+    /// Список инициализованных на сцене фонов
+    /// </summary>
+    public List<Transform> initBackGround;
 
-  private List<Transform> backgroundPart;
-  private Vector2 repeatableSize;
-  private Vector3 gap = Vector3.zero;
+    public enum DirectionType { left, right, up, down };
 
-  void Start()
-  {
-    // For infinite background only
-    if (isLooping)
+
+    void Update()
     {
-      // Get all part of the layer
-      backgroundPart = new List<Transform>();
 
-      for (int i = 0; i < transform.childCount; i++)
-      {
-        Transform child = transform.GetChild(i);
+        // Находим границы камеры в World Space координатах
+        var dist = (transform.position - Camera.main.transform.position).z;
+        float leftBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).x;
+        float rightBorder = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, dist)).x;
+        float topBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).y;
+        float bottomBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 1, dist)).y;
 
-        // Only visible children
-        if (child.GetComponent<Renderer>() != null)
+        // Получаем первый и последний элемент
+        Transform lastBackGround = initBackGround.Last();
+        Transform firstBackGround = initBackGround.First();
+        SpriteRenderer spriteRendererLastBackGround = lastBackGround.GetComponent<SpriteRenderer>();
+        SpriteRenderer spriteRendererFirstBackGround = firstBackGround.GetComponent<SpriteRenderer>();
+
+        // Определяем какие границы являются входными и выходными, и определяем направление движения фона
+        Vector3 exitBorder = Vector3.zero;
+        Vector3 entryBorder = Vector3.zero;
+        Vector3 movement = Vector3.zero;
+        switch (direction)
         {
-          backgroundPart.Add(child);
-          
-          // First element
-          if (backgroundPart.Count == 1)
-          {
-            // Gap is the space between zero and the first element. 
-            // We need it when we loop.
-            gap = child.transform.position;
-            
-            if (direction.x == 0) gap.x = 0;
-            if (direction.y == 0) gap.y = 0;
-          }
+            case DirectionType.left:
+                {
+                    exitBorder.x = leftBorder;
+                    entryBorder.x = rightBorder;
+                    movement = speed * Vector3.left;
+
+                    //Добавление нового фона в тот момент когда последний перескает входную границу эрана своей правой стороной
+                    if (lastBackGround.position.x + spriteRendererLastBackGround.sprite.bounds.extents.x < entryBorder.x)
+                    {
+                        float x = lastBackGround.position.x + spriteRendererLastBackGround.sprite.bounds.extents.x + backGroundPrefab[0].GetComponent<SpriteRenderer>().sprite.bounds.extents.x;
+                        int index = Random.Range(0, backGroundPrefab.Count);
+                        Vector3 startPos = new Vector3(x, lastBackGround.position.y, lastBackGround.position.z);
+                        GameObject initObj = (GameObject)Instantiate(backGroundPrefab[index], startPos, backGroundPrefab[index].transform.rotation);
+                        initBackGround.Add(initObj.transform);
+                    }
+
+                    //Удаление первого фона в тот момент когда его правая сторона пересекает выходную границу эрана
+                    if (firstBackGround.position.x + firstBackGround.GetComponent<SpriteRenderer>().sprite.bounds.extents.x < exitBorder.x)
+                    {
+                        initBackGround.Remove(firstBackGround);
+                        Destroy(firstBackGround.gameObject);
+                    }
+
+
+                    break;
+                }
+            case DirectionType.right:
+                {
+                    exitBorder.x = rightBorder;
+                    entryBorder.x = leftBorder;
+                    movement = speed * Vector3.right;
+
+                    //Добавление нового фона в тот момент когда последний перескает входную границу эрана своей левой стороной
+                    if (lastBackGround.position.x - spriteRendererLastBackGround.sprite.bounds.extents.x > entryBorder.x)
+                    {
+                        float x = lastBackGround.position.x - spriteRendererLastBackGround.sprite.bounds.extents.x - backGroundPrefab[0].GetComponent<SpriteRenderer>().sprite.bounds.extents.x;
+                        int index = Random.Range(0, backGroundPrefab.Count);
+                        Vector3 startPos = new Vector3(x, lastBackGround.position.y, lastBackGround.position.z);
+                        GameObject initObj = (GameObject)Instantiate(backGroundPrefab[index], startPos, backGroundPrefab[index].transform.rotation);
+                        initBackGround.Add(initObj.transform);
+                    }
+
+                    //Удаление первого фона в тот момент когда его левая сторона пересекает выходную границу эрана
+                    if (firstBackGround.position.x - firstBackGround.GetComponent<SpriteRenderer>().sprite.bounds.extents.x > exitBorder.x)
+                    {
+                        initBackGround.Remove(firstBackGround);
+                        Destroy(firstBackGround.gameObject);
+                    }
+
+                    break;
+                }
+            case DirectionType.up:
+                {
+                    exitBorder.y = bottomBorder;
+                    entryBorder.y = topBorder;
+                    movement = speed * Vector3.up;
+
+                    //Добавление нового фона в тот момент когда последний перескает входную границу эрана своей нижней стороной
+                    if (lastBackGround.position.y - spriteRendererLastBackGround.sprite.bounds.extents.y > entryBorder.y)
+                    {
+                        float y = lastBackGround.position.y - spriteRendererLastBackGround.sprite.bounds.extents.y- backGroundPrefab[0].GetComponent<SpriteRenderer>().sprite.bounds.extents.y;
+                        int index = Random.Range(0, backGroundPrefab.Count);
+                        Vector3 startPos = new Vector3(lastBackGround.position.x, y, lastBackGround.position.z);
+                        GameObject initObj = (GameObject)Instantiate(backGroundPrefab[index], startPos, backGroundPrefab[index].transform.rotation);
+                        initBackGround.Add(initObj.transform);
+                    }
+
+                    //Удаление первого фона в тот момент когда его нижняя сторона пересекает выходную границу эрана
+                    if (firstBackGround.position.y - firstBackGround.GetComponent<SpriteRenderer>().sprite.bounds.extents.y > exitBorder.y)
+                    {
+                        initBackGround.Remove(firstBackGround);
+                        Destroy(firstBackGround.gameObject);
+                    }
+
+                    break;
+                }
+            case DirectionType.down:
+                {
+                    exitBorder.y = topBorder;
+                    entryBorder.y = bottomBorder;
+                    movement = speed * Vector3.down;
+
+                    //Добавление нового фона в тот момент когда последний перескает входную границу эрана своей верхней стороной
+                    if (lastBackGround.position.y + spriteRendererLastBackGround.sprite.bounds.extents.y < entryBorder.y)
+                    {
+                        float y = lastBackGround.position.y + spriteRendererLastBackGround.sprite.bounds.extents.y + backGroundPrefab[0].GetComponent<SpriteRenderer>().sprite.bounds.extents.y;
+                        int index = Random.Range(0, backGroundPrefab.Count);
+                        Vector3 startPos = new Vector3(lastBackGround.position.x, y, lastBackGround.position.z);
+                        GameObject initObj = (GameObject)Instantiate(backGroundPrefab[index], startPos, backGroundPrefab[index].transform.rotation);
+                        initBackGround.Add(initObj.transform);
+                    }
+
+                    //Удаление первого фона в тот момент когда его верхняя сторона пересекает выходную границу эрана
+                    if (firstBackGround.position.y + firstBackGround.GetComponent<SpriteRenderer>().sprite.bounds.extents.y < exitBorder.y)
+                    {
+                        initBackGround.Remove(firstBackGround);
+                        Destroy(firstBackGround.gameObject);
+                    }
+
+                    break;
+                }
         }
-      }
 
-      if (backgroundPart.Count == 0)
-      {
-        Debug.LogError("Nothing to scroll!");
-      }
+        //Придаем движение фону
+        movement *= Time.deltaTime;
+        foreach (Transform background in initBackGround)
+        {
+            background.Translate(movement);
+        }
 
-      // Sort by position 
-      // -- Depends on the scrolling direction
-      backgroundPart = backgroundPart.OrderBy(t => t.position.x * (-1 * direction.x)).ThenBy(t => t.position.y * (-1 * direction.y)).ToList();
-
-      // Get the size of the repeatable parts
-      var first = backgroundPart.First();
-      var last = backgroundPart.Last();
-
-      repeatableSize = new Vector2(
-        Mathf.Abs(last.position.x - first.position.x),
-        Mathf.Abs(last.position.y - first.position.y)
-        );
+     
     }
-  }
-
-  void Update()
-  {
-    // Movement
-    Vector3 movement = new Vector3(
-      speed.x * direction.x,
-      speed.y * direction.y,
-      0);
-
-    movement *= Time.deltaTime;
-    transform.Translate(movement);
-
-    // Move the camera
-    if (isLinkedToCamera)
-    {
-      Camera.main.transform.Translate(movement);
-    }
-
-    // Loop
-    if (isLooping)
-    {
-      // Camera borders
-      var dist = (transform.position - Camera.main.transform.position).z;
-      float leftBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).x;
-      float rightBorder = Camera.main.ViewportToWorldPoint(new Vector3(1, 0, dist)).x;
-//      float width = Mathf.Abs(rightBorder - leftBorder);
-
-      var topBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 0, dist)).y;
-      var bottomBorder = Camera.main.ViewportToWorldPoint(new Vector3(0, 1, dist)).y;
-//      float height = Mathf.Abs(topBorder - bottomBorder);
-
-      // Determine entry and exit border using direction
-      Vector3 exitBorder = Vector3.zero;
-      Vector3 entryBorder = Vector3.zero;
-
-      if (direction.x < 0)
-      {
-        exitBorder.x = leftBorder;
-        entryBorder.x = rightBorder;
-      }
-      else if (direction.x > 0)
-      {
-        exitBorder.x = rightBorder;
-        entryBorder.x = leftBorder;
-      }
-
-      if (direction.y < 0)
-      {
-        exitBorder.y = bottomBorder;
-        entryBorder.y = topBorder;
-      }
-      else if (direction.y > 0)
-      {
-        exitBorder.y = topBorder;
-        entryBorder.y = bottomBorder;
-      }
-
-      // Get the first object
-      Transform firstChild = backgroundPart.FirstOrDefault();
-
-      if (firstChild != null)
-      {
-        bool checkVisible = false;
-        if (direction.x != 0)
-        {
-          if ((direction.x < 0 && (firstChild.position.x < exitBorder.x))
-          || (direction.x > 0 && (firstChild.position.x > exitBorder.x)))
-          {
-            checkVisible = true;
-          }
-        }
-        if (direction.y != 0)
-        {
-          if ((direction.y < 0 && (firstChild.position.y < exitBorder.y))
-          || (direction.y > 0 && (firstChild.position.y > exitBorder.y)))
-          {
-            checkVisible = true;
-          }
-        }
-
-        // Check if the sprite is really visible on the camera or not
-        if (checkVisible)
-        {
-          if (firstChild.GetComponent<Renderer>().IsVisibleFrom(Camera.main) == false)
-          {
-            // Set position in the end
-            firstChild.position = gap; 
-            // The first part become the last one
-            backgroundPart.Remove(firstChild);
-            backgroundPart.Add(firstChild);
-          }
-        }
-      }
-
-    }
-  }
 }
