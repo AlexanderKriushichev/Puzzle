@@ -343,7 +343,7 @@ public class Field : MonoBehaviour {
     /// </summary>
     private int GenerateColor(int x, int y)
     {
-        List<int> colorList = new List<int> { 0, 1, 2, 3 };
+        List<int> colorList = new List<int> { 0, 1, 2, 3, 4, 5 };
         if ((x > 1) && (cells[x - 1, y].crystal.colorID == cells[x - 2, y].crystal.colorID))
         {
             colorList.Remove(cells[x - 1, y].crystal.colorID);

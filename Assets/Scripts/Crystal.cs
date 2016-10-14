@@ -33,37 +33,37 @@ public class Crystal : MonoBehaviour {
 	}
 
     
-    /// <summary>
-    /// Смена цвета кристалла
-    /// </summary>
-    public void SwitchColor()
-    {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+    ///// <summary>
+    ///// Смена цвета кристалла
+    ///// </summary>
+    //public void SwitchColor()
+    //{
+    //    spriteRenderer = GetComponent<SpriteRenderer>();
 
-        switch (type)
-        {
-            case TypeOfCrystal.Red:
-                {
-                    spriteRenderer.color = Color.red;
-                    break;
-                }
-            case TypeOfCrystal.Blue:
-                {
-                    spriteRenderer.color = Color.blue;
-                    break;
-                }
-            case TypeOfCrystal.Green:
-                {
-                    spriteRenderer.color = Color.green;
-                    break;
-                }
-            case TypeOfCrystal.Yellow:
-                {
-                    spriteRenderer.color = Color.yellow;
-                    break;
-                }
-        }
-    }
+    //    switch (type)
+    //    {
+    //        case TypeOfCrystal.Red:
+    //            {
+    //                spriteRenderer.color = Color.red;
+    //                break;
+    //            }
+    //        case TypeOfCrystal.Blue:
+    //            {
+    //                spriteRenderer.color = Color.blue;
+    //                break;
+    //            }
+    //        case TypeOfCrystal.Green:
+    //            {
+    //                spriteRenderer.color = Color.green;
+    //                break;
+    //            }
+    //        case TypeOfCrystal.Yellow:
+    //            {
+    //                spriteRenderer.color = Color.yellow;
+    //                break;
+    //            }
+    //    }
+    //}
 
     //public void SetType(TypeOfCrystal typeOfCrystal);
 
@@ -75,13 +75,15 @@ public class Crystal : MonoBehaviour {
     { 
         switch (colorID)
         {
-            case 0: { return TypeOfCrystal.Red;    }
-            case 1: { return TypeOfCrystal.Blue;   }
-            case 2: { return TypeOfCrystal.Green;  }
-            case 3: { return TypeOfCrystal.Yellow; }
+            case 0: { return TypeOfCrystal.triangle; }
+            case 1: { return TypeOfCrystal.sphere;   }
+            case 2: { return TypeOfCrystal.rectangle;  }
+            case 3: { return TypeOfCrystal.pentagon; }
+            case 4: { return TypeOfCrystal.hexagon; }
+            case 5: { return TypeOfCrystal.rhomb; }
+            default: { return TypeOfCrystal.triangle; }
         }
-// Если цифровой код отличается от [0..3] - возвращает красный
-        return TypeOfCrystal.Red;
+
     }
 
     /// <summary>
@@ -115,4 +117,4 @@ public class Crystal : MonoBehaviour {
 /// <summary>
 /// Тип цвета кристалла
 /// </summary>
-public enum TypeOfCrystal { Red, Blue, Green, Yellow}
+public enum TypeOfCrystal { triangle, sphere, rhomb, rectangle, pentagon, hexagon }
