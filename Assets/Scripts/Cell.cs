@@ -3,7 +3,8 @@ using System.Collections;
 using DG.Tweening;
 using System.Collections.Generic;
 
-public class Cell : MonoBehaviour {
+public class Cell : MonoBehaviour
+{
 
     [Header("Position")]
     public int x;
@@ -11,7 +12,10 @@ public class Cell : MonoBehaviour {
     [Space(10)]
 
     public bool isCellGenerate;
+    [Space(10)]
 
+    public bool isBarrier;
+    [Space(10)]
     public Crystal crystal;
 
     public Field gameField;
@@ -24,10 +28,11 @@ public class Cell : MonoBehaviour {
 
     private Vector2 startPositionOfMouse;
 
+    private SpriteRenderer spriteRenderer;
 
     void Start()
     {
-        
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void OnMouseDown()
@@ -39,9 +44,17 @@ public class Cell : MonoBehaviour {
     {
         if (!gameField.CheckMove())
             return;
+        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+        if (hit.collider != null)
+        {
+            if (hit.collider.gameObject == gameObject)
+                return;
+        }
+
 
         Vector2 endPositionOfMouse = Input.mousePosition;
         Vector2 moveVector = endPositionOfMouse - startPositionOfMouse;
+
         if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
         {
             if (moveVector.x > 0)
@@ -86,11 +99,11 @@ public class Cell : MonoBehaviour {
     public void ExchangeCrystal(Cell target)
     {
         isCrystalMove = true;
-      
+        target.isCrystalMove = true;
         if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
         {
             crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
-            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
+            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.EndMove); ;
 
             Crystal obm;
             obm = crystal;
@@ -113,54 +126,143 @@ public class Cell : MonoBehaviour {
         isCrystalMove = true;
 
         crystal.transform.DOMove(transform.position, 0.5f).OnComplete(EndMove);
-        target.crystal.transform.DOMove(target.transform.position, 0.5f);
+        target.crystal.transform.DOMove(target.transform.position, 0.5f).OnComplete(target.EndMove);
 
     }
 
     private void EndMove()
     {
         isCrystalMove = false;
-        gameField.DestroyCrystal();
+        //gameField.DestroyCrystal();
+        gameField.AddCombination(this);
     }
+
+    public void Destroy()
+    {
+        Destroy(crystal.gameObject);
+        crystal = null;
+    }
+
+    public static void MoveToCell(Cell from, Cell target)
+    {
+        if (from == target)
+        {
+            from.isCrystalMove = false;
+            target.EndMove();
+            return;
+        }
+        target.crystal = from.crystal;
+        target.crystal.transform.parent = target.transform;
+        target.crystal.transform.DOMove(target.transform.position, ((int)(target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(target.EndMove);
+        from.crystal = null;
+        from.isCrystalMove = false;
+        target.isCrystalMove = true;
+    }
+
+
 
     /// <summary>
     /// Перемещение кристалов
     /// </summary>
     public void CrystalMove()
     {
-        if (isCellGenerate && crystal == null)
+        if (isCellGenerate && crystal == null && !isBarrier)
         {
             int countOfCrystal = 1;
             while (crystal == null)
             {
                 GameObject initCell = (GameObject)Instantiate(gameField.crystalPrefab, gameObject.transform);
-                Cell emptyCell = gameField.GetEmptyCell(x, y);
+                Cell emptyCell = gameField.GetEmptyCellDown(x, y);
                 emptyCell.crystal = initCell.GetComponent<Crystal>();
                 emptyCell.crystal.SetRandomType();
                 //crystal.SwitchColor();
                 emptyCell.crystal.transform.position = gameObject.transform.position + new Vector3(0, 1 * countOfCrystal, 0);
-                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(emptyCell.EndMove);
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, ((int)(emptyCell.crystal.transform.position - emptyCell.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(emptyCell.EndMove);
+                emptyCell.isCrystalMove = true;
                 countOfCrystal++;
             }
+            return;
         }
 
         if (crystal == null && !isCrystalMove && !isCellGenerate)
         {
             if (gameField.cells[x, y - 1].crystal != null && !gameField.cells[x, y - 1].isCrystalMove)
             {
-                Cell emptyCell = gameField.GetEmptyCell(x, y);
-                emptyCell.crystal = gameField.cells[x, y - 1].crystal;
-                emptyCell.crystal.transform.parent = gameObject.transform;
-                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, 0.5f).SetEase(Ease.InSine).OnComplete(emptyCell.EndMove);
-                gameField.cells[x, y - 1].crystal = null;
-                emptyCell.isCrystalMove = true;
+                MoveToCell(gameField.cells[x, y - 1], gameField.GetEmptyCellDown(x, y));
+                return;
+            }
+            if (gameField.cells[x, y - 1].isBarrier)
+            {
+                if (x > 0)
+                {
+                    if (gameField.cells[x - 1, y - 1].crystal != null && !gameField.cells[x - 1, y - 1].isCrystalMove && !gameField.cells[x - 1, y - 1].isBarrier)
+                    {
+                        MoveToCell(gameField.cells[x - 1, y - 1], this);
+                        return;
+                    }
+                }
+                if (x < 7)
+                {
+                    if (gameField.cells[x + 1, y - 1].crystal != null && !gameField.cells[x + 1, y - 1].isCrystalMove && !gameField.cells[x + 1, y - 1].isBarrier)
+                    {
+                        MoveToCell(gameField.cells[x + 1, y - 1], this);
+                        return;
+                    }
+                }
             }
         }
+
+        if (crystal != null && !isCrystalMove && gameField.UpCellCanDown(x, y) == false && gameField.GetEmptyCellDown(x, y) == this)
+        {
+            if (y < 7)
+            {
+                if (x > 0)
+                {
+                    if (gameField.cells[x - 1, y + 1].crystal == null && !gameField.cells[x - 1, y + 1].isCrystalMove && !gameField.cells[x - 1, y + 1].isBarrier && gameField.UpCellCanDown(x - 1, y + 1) == false )
+                    {
+                        if (gameField.GetEmptyCellDown(x - 1, y + 1) == gameField.cells[x - 1, y + 1])
+                        {
+                            MoveToCell(gameField.cells[x, y], gameField.cells[x - 1, y + 1]);
+                            return;
+                        }
+                        else
+                        {
+                            gameField.cells[x - 1, y + 1].crystal = crystal;
+                            gameField.cells[x - 1, y + 1].crystal.transform.parent = gameField.cells[x - 1, y + 1].transform;
+                            gameField.cells[x - 1, y + 1].crystal.transform.DOMove(gameField.cells[x - 1, y + 1].transform.position, ((int)(gameField.cells[x - 1, y + 1].crystal.transform.position - gameField.cells[x - 1, y + 1].transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(()=>MoveToCell(gameField.cells[x - 1, y + 1], gameField.GetEmptyCellDown(x - 1, y + 1)));
+                            crystal = null;
+                            isCrystalMove = false;
+                            gameField.cells[x - 1, y + 1].isCrystalMove = true;        
+                        }
+                    }
+                }
+                if (x < 7)
+                {
+                    if (gameField.cells[x + 1, y + 1].crystal == null && !gameField.cells[x + 1, y + 1].isCrystalMove && !gameField.cells[x + 1, y + 1].isBarrier && gameField.UpCellCanDown(x + 1, y + 1) == false && gameField.GetEmptyCellDown(x + 1, y + 1) == gameField.cells[x + 1, y + 1])
+                    {
+                        MoveToCell(gameField.cells[x, y], gameField.cells[x + 1, y + 1]);
+                        return;
+                    }
+                }
+            }
+        }
+
+
+
+
+
     }
 
-    
-    void Update () {
 
+
+
+
+
+
+
+    void Update()
+    {
+        if (isBarrier) return;
         CrystalMove();
     }
 }
