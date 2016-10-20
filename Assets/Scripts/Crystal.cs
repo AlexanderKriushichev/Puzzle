@@ -24,6 +24,7 @@ public class Crystal : MonoBehaviour {
     /// </summary>
     public Sprite[] spritesOfCrystal = new Sprite[4];
 
+    private Cell previousCell;
 
 	// Use this for initialization
 	void Start () {
@@ -78,6 +79,38 @@ public class Crystal : MonoBehaviour {
         colorID = ID;
         type = GetColor();
         spriteRenderer.sprite = spritesOfCrystal[colorID];
+    }
+
+    void OnDestroy()
+    {
+        if (previousCell != null)
+        {
+            previousCell.isCrystalIn = false;
+        }
+    }
+
+    void Update()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.zero);
+        if (hit.collider != null)
+        {
+            if (previousCell != hit.collider.GetComponent<Cell>())
+            {
+                if (previousCell != null)
+                {
+                    previousCell.isCrystalIn = false;
+                }
+                previousCell = hit.collider.GetComponent<Cell>();
+                previousCell.isCrystalIn = true;
+            }
+            else
+            {
+                if (previousCell != null)
+                {
+                    previousCell.isCrystalIn = true;
+                }
+            }
+        }
     }
 }
 
