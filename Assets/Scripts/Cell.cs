@@ -100,22 +100,25 @@ public class Cell : MonoBehaviour
     /// <param name="target">Клетка</param>
     public void ExchangeCrystal(Cell target)
     {
-        isCrystalMove = true;
-        target.isCrystalMove = true;
-        if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
+        if (target.crystal != null)
         {
-            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
-            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.EndMove); ;
+            isCrystalMove = true;
+            target.isCrystalMove = true;
+            if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
+            {
+                crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
+                target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.EndMove); ;
 
-            Crystal obm;
-            obm = crystal;
-            crystal = target.crystal;
-            target.crystal = obm;
-        }
-        else
-        {
-            crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(() => ReturnCrystal(target));
-            target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
+                Crystal obm;
+                obm = crystal;
+                crystal = target.crystal;
+                target.crystal = obm;
+            }
+            else
+            {
+                crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(() => ReturnCrystal(target));
+                target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine);
+            }
         }
     }
 
@@ -132,20 +135,30 @@ public class Cell : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Конец перемещения кристала
+    /// </summary>
     private void EndMove()
     {
         isCrystalMove = false;
-        //gameField.DestroyCrystal();
         gameField.AddCombination(this);
     }
 
+    /// <summary>
+    /// Уничтожение кристала
+    /// </summary>
     public void Destroy()
     {
         Destroy(crystal.gameObject);
         crystal = null;
     }
 
-    public static void MoveToCell(Cell from, Cell target)
+    /// <summary>
+    /// Передвижение кристала с одной позиции на другую
+    /// </summary>
+    /// <param name="from">Начальная позиция</param>
+    /// <param name="target">Конечная позиция</param>
+    public void MoveToCell(Cell from, Cell target)
     {
         if (from == target)
         {
@@ -159,9 +172,25 @@ public class Cell : MonoBehaviour
         from.crystal = null;
         from.isCrystalMove = false;
         target.isCrystalMove = true;
+        gameField.MarkCellCrystalIn(from, target);
     }
 
-
+    public void MoveToCellDiagonel(Cell from, Cell target)
+    {
+        if (from == target)
+        {
+            from.isCrystalMove = false;
+            target.EndMove();
+            return;
+        }
+        target.crystal = from.crystal;
+        target.crystal.transform.parent = target.transform;
+        target.crystal.transform.DOMove(target.transform.position, ((int)(target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(() => target.MoveToCell(target, gameField.GetEmptyCellDown(target.x, target.y)));
+        from.crystal = null;
+        from.isCrystalMove = false;
+        target.isCrystalMove = true;
+        gameField.MarkCellCrystalIn(from, target);
+    }
 
     /// <summary>
     /// Перемещение кристалов
@@ -199,7 +228,7 @@ public class Cell : MonoBehaviour
                 {
                     if (gameField.cells[x - 1, y - 1].crystal != null && !gameField.cells[x - 1, y - 1].isCrystalMove && !gameField.cells[x - 1, y - 1].isBarrier)
                     {
-                        MoveToCell(gameField.cells[x - 1, y - 1], this);
+                        MoveToCellDiagonel(gameField.cells[x - 1, y - 1], this);
                         return;
                     }
                 }
@@ -207,15 +236,15 @@ public class Cell : MonoBehaviour
                 {
                     if (gameField.cells[x + 1, y - 1].crystal != null && !gameField.cells[x + 1, y - 1].isCrystalMove && !gameField.cells[x + 1, y - 1].isBarrier)
                     {
-                        MoveToCell(gameField.cells[x + 1, y - 1], this);
+                        MoveToCellDiagonel(gameField.cells[x + 1, y - 1], this);
                         return;
                     }
                 }
             }
         }
 
-        
-        }
+
+    }
 
 
 
@@ -227,11 +256,11 @@ public class Cell : MonoBehaviour
             {
                 if (x > 0)
                 {
-                    if (gameField.cells[x - 1, y + 1].crystal == null && !gameField.cells[x - 1, y + 1].isCrystalMove && !gameField.cells[x - 1, y + 1].isBarrier && gameField.UpCellCanDown(x - 1, y + 1) == false && !gameField.cells[x - 1, y + 1].isCrystalMove)
+                    if (gameField.cells[x - 1, y + 1].crystal == null && !gameField.cells[x - 1, y + 1].isCrystalMove && !gameField.cells[x - 1, y + 1].isBarrier && gameField.UpCellCanDown(x - 1, y + 1) == false && !gameField.cells[x - 1, y + 1].isCrystalIn)
                     {
                         if (gameField.GetEmptyCellDown(x - 1, y + 1) == gameField.cells[x - 1, y + 1])
                         {
-                            MoveToCell(gameField.cells[x, y], gameField.cells[x - 1, y + 1]);
+                            MoveToCellDiagonel(gameField.cells[x, y], gameField.cells[x - 1, y + 1]);
                             return;
                         }
                         else
@@ -251,7 +280,7 @@ public class Cell : MonoBehaviour
                     {
                         if (gameField.GetEmptyCellDown(x + 1, y + 1) == gameField.cells[x + 1, y + 1])
                         {
-                            MoveToCell(gameField.cells[x, y], gameField.cells[x + 1, y + 1]);
+                            MoveToCellDiagonel(gameField.cells[x, y], gameField.cells[x + 1, y + 1]);
                             return;
                         }
                         else

@@ -86,6 +86,7 @@ public class Crystal : MonoBehaviour {
         if (previousCell != null)
         {
             previousCell.isCrystalIn = false;
+            previousCell.CrystalMove();
         }
     }
 

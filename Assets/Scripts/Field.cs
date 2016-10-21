@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using DG.Tweening;
 
 
-public class Field : MonoBehaviour {
+public class Field : MonoBehaviour
+{
 
-    public Cell[,] cells = new Cell[8,8];
-    
+    public Cell[,] cells = new Cell[8, 8];
+
     public GameObject crystalPrefab;
 
     public static bool isCrystalMove;
@@ -15,10 +16,18 @@ public class Field : MonoBehaviour {
     /// <summary>
     /// Комбинации
     /// </summary>
-    private List<Combination> combinations;
+    private List<Combination> combinations = new List<Combination>();
 
-	// Use this for initialization
-	void Start () {
+    /// <summary>
+    /// Флаг для проведения одной проверки на возможность хода за ход
+    /// </summary>
+    private bool onecheckOnStep;
+
+
+
+    // Use this for initialization
+    void Start()
+    {
 
         foreach (Cell cell in gameObject.GetComponentsInChildren<Cell>())
         {
@@ -40,9 +49,9 @@ public class Field : MonoBehaviour {
             }
         }
 
-       
-        
-	}
+
+
+    }
 
     void ResetAllCells()
     {
@@ -59,27 +68,6 @@ public class Field : MonoBehaviour {
         {
             cell.isAddInList = false;
             cell.isChecked = false;
-        }
-    }
-
-    public void MoveCrystals()
-    {
-        
-        bool f = false;
-        while (!f)
-        {
-            bool move = true;
-            foreach (Cell cell in cells)
-            {
-                if (cell.crystal == null)
-                {
-                    cell.CrystalMove();
-                    Debug.Log(1);
-                    move = false;
-                    break;
-                }
-            }
-            f = move;
         }
     }
 
@@ -143,7 +131,7 @@ public class Field : MonoBehaviour {
         return false;
     }
 
-    
+
     /// <summary>
     /// Проверка клетки на нахождение под препятствием
     /// </summary>
@@ -162,70 +150,29 @@ public class Field : MonoBehaviour {
     }
 
     /// <summary>
-    /// Когда клетка под препятствием ижет поиск диагональных спусков для кристалов
+    /// Пометить все клетки на пути кристала как CrystalIn
     /// </summary>
-    /// <param name="x">X</param>
-    /// <param name="y">Y</param>
-    public void FindDiagonalCellMove(int x, int y)
+    /// <param name="from">Начальная клетка</param>
+    /// <param name="to">Конечная клетка</param>
+    public void MarkCellCrystalIn(Cell from, Cell to)
     {
-        CheckNearCellFromFindDiagonal(x, y, -1);
-        CheckNearCellFromFindDiagonal(x, y, 1);
-    }
-
-    private void CheckNearCellFromFindDiagonal(int x, int y, int index)
-    {
-        if (x == 0)
+        if (from.x == to.x)
         {
-            if (cells[x, y].crystal != null && !cells[x, y].isCrystalMove && cells[x, y - 1].crystal != null && !cells[x, y - 1].isCrystalMove && !cells[x, y - 1].isBarrier)
+            if (from.y < to.y)
             {
-
-            }
-        }
-        if (x == 7)
-        {
-            if (cells[x, y].crystal != null && !cells[x, y].isCrystalMove && cells[x, y - 1].crystal != null && !cells[x, y - 1].isCrystalMove && !cells[x, y - 1].isBarrier)
-            {
-            }
-        }
-        x += index;
-        if (x < 0 || x > 7) return;
-        if (cells[x, y].crystal != null)
-        {
-            if (cells[x, y - 1].isBarrier)
-            {
-                FindDiagonal(x, y + 1, index);
-            }
-            else
-            {
-                if (cells[x, y - 1].crystal != null)
+                for (int i = from.y; i <= to.y; i++)
                 {
-                    FindDiagonal(x, y - 1, index);
+                    cells[from.x, i].isCrystalIn = true;
                 }
             }
-        }
-        else
-        {
-            if (!cells[x, y].isBarrier)
+
+            if (from.y > to.y)
             {
-                if (cells[x, y - 1].isBarrier)
+                for (int i = to.y; i <= from.y; i++)
                 {
-                    CheckNearCellFromFindDiagonal(x, y, index);
+                    cells[from.x, i].isCrystalIn = true;
                 }
             }
-        }
-    }
-
-    private void FindDiagonal(int x, int y, int index)
-    {
-        if (y == 7) return;
-        if (x - index == 0 || x - index == 7) return;
-        if (cells[x - index, y].crystal == null)
-        {
-            Cell.MoveToCell(cells[x - index,y],cells[x, y + 1]);
-        }
-        else
-        {
-            FindDiagonal(x-index, y + 1, index);
         }
     }
 
@@ -239,15 +186,21 @@ public class Field : MonoBehaviour {
     {
         if (y + 1 > 7) return cells[x, y];
 
-        if (cells[x, y + 1].crystal == null  && !cells[x, y + 1].isBarrier)
+        if (cells[x, y + 1].crystal == null && !cells[x, y + 1].isBarrier)
         {
             return GetEmptyCellDown(x, y + 1);
         }
 
         return cells[x, y];
-        
+
     }
 
+    /// <summary>
+    /// Проверка клетки на нахождение под препятствием
+    /// </summary>
+    /// <param name="x">X</param>
+    /// <param name="y">Y</param>
+    /// <returns>Возвращает true если находится не над препятствием, иначе false</returns>
     public bool UpCellCanDown(int x, int y)
     {
         if (y - 1 < 0) return true;
@@ -255,27 +208,16 @@ public class Field : MonoBehaviour {
         if (cells[x, y - 1].crystal == null)
         {
             if (!cells[x, y - 1].isBarrier)
-            { 
+            {
                 return UpCellCanDown(x, y - 1);
             }
             else
-            { 
+            {
                 return false;
             }
         }
 
         return true;
-    }
-
-
-    public bool UpCell(int x, int y)
-    {
-        if (y == 0)
-            return true;
-        if (cells[x, y - 1].crystal == null && !cells[x, y - 1].isCrystalMove)
-            return true;
-        else
-            return false;
     }
 
     /// <summary>
@@ -284,14 +226,14 @@ public class Field : MonoBehaviour {
     /// <param name="x">Х</param>
     /// <param name="y">Y</param>
     /// <returns>Список клеток</returns>
-    public List<Cell> GetAdjacentCells(int x, int y, ref List<Cell> checkedCell)
+    public List<Cell> GetAdjacentCells(int x, int y, ref List<Cell> checkedCell, ref bool waiting)
     {
-        checkedCell.Add(cells[x,y]);
-        cells[x,y].isChecked = true;
+        checkedCell.Add(cells[x, y]);
+        cells[x, y].isChecked = true;
         List<Cell> nearbyCells = new List<Cell>();
-        if (cells[x,y].isCrystalMove)
+        if (cells[x, y].isCrystalMove)
             return nearbyCells;
-        if (cells[x,y].crystal == null)
+        if (cells[x, y].crystal == null)
             return nearbyCells;
         if (x > 0 && x < 7)
         {
@@ -316,27 +258,39 @@ public class Field : MonoBehaviour {
                     }
                     if (!cells[x - 1, y].isChecked)
                     {
-                        nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell));
+                        nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell, ref waiting));
                     }
                     if (!cells[x + 1, y].isChecked)
                     {
-                        nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell));
+                        nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell, ref waiting));
                     }
                 }
                 else
                 {
+
+                    if (cells[x - 1, y].crystal.type == cells[x, y].crystal.type && cells[x - 1, y].isCrystalMove && GetEmptyCellDown(x - 1, y) == cells[x - 1, y])
+                    {
+                        waiting = true;
+                    }
+
+                    if (cells[x + 1, y].crystal.type == cells[x, y].crystal.type && cells[x + 1, y].isCrystalMove && GetEmptyCellDown(x + 1, y) == cells[x + 1, y])
+                    {
+                        waiting = true;
+                    }
+
                     if (cells[x - 1, y].crystal.type == cells[x, y].crystal.type && !cells[x - 1, y].isCrystalMove)
                     {
                         if (!cells[x - 1, y].isChecked)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell, ref waiting));
                         }
                     }
+
                     if (cells[x + 1, y].crystal.type == cells[x, y].crystal.type && !cells[x + 1, y].isCrystalMove)
                     {
                         if (!cells[x + 1, y].isChecked)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell, ref waiting));
                         }
                     }
                 }
@@ -349,8 +303,13 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x - 1, y].isChecked)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell, ref waiting));
                         }
+                    }
+
+                    if (cells[x - 1, y].crystal.type == cells[x, y].crystal.type && cells[x - 1, y].isCrystalMove && GetEmptyCellDown(x - 1, y) == cells[x - 1, y])
+                    {
+                        waiting = true;
                     }
                 }
                 if (cells[x + 1, y].crystal != null)
@@ -359,8 +318,13 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x + 1, y].isChecked)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell,ref waiting));
                         }
+                    }
+
+                    if (cells[x + 1, y].crystal.type == cells[x, y].crystal.type && cells[x + 1, y].isCrystalMove && GetEmptyCellDown(x + 1, y) == cells[x + 1, y])
+                    {
+                        waiting = true;
                     }
                 }
             }
@@ -375,7 +339,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x - 1, y].isChecked && !cells[x - 1, y].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x - 1, y, ref checkedCell,ref waiting));
+                        }
+
+                        if (cells[x - 1, y].isCrystalMove && GetEmptyCellDown(x - 1, y) == cells[x - 1, y])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -388,7 +357,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x + 1, y].isChecked && !cells[x + 1, y].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x + 1, y, ref checkedCell, ref waiting));
+                        }
+
+                        if (cells[x + 1, y].isCrystalMove && GetEmptyCellDown(x + 1, y) == cells[x + 1, y])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -418,28 +392,38 @@ public class Field : MonoBehaviour {
                     if (!cells[x, y - 1].isChecked)
                     {
 
-                        nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell));
+                        nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell, ref waiting));
                     }
                     if (!cells[x, y + 1].isChecked)
                     {
 
-                        nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell));
+                        nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell, ref waiting));
                     }
                 }
                 else
                 {
+                    if (cells[x, y - 1].crystal.type == cells[x, y].crystal.type && cells[x, y - 1].isCrystalMove && GetEmptyCellDown(x, y - 1) == cells[x, y - 1])
+                    {
+                        waiting = true;
+                    }
+
+                    if (cells[x, y + 1].crystal.type == cells[x, y].crystal.type && cells[x, y + 1].isCrystalMove && GetEmptyCellDown(x, y + 1) == cells[x, y + 1])
+                    {
+                        waiting = true;
+                    }
+
                     if (cells[x, y - 1].crystal.type == cells[x, y].crystal.type)
                     {
                         if (!cells[x, y - 1].isChecked && !cells[x, y - 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell, ref waiting));
                         }
                     }
                     if (cells[x, y + 1].crystal.type == cells[x, y].crystal.type)
                     {
                         if (!cells[x, y + 1].isChecked && !cells[x, y + 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell, ref waiting));
                         }
                     }
                 }
@@ -452,7 +436,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x, y - 1].isChecked && !cells[x, y - 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell, ref waiting));
+                        }
+
+                        if (cells[x, y - 1].isCrystalMove && GetEmptyCellDown(x, y - 1) == cells[x, y - 1])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -462,7 +451,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x, y + 1].isChecked && !cells[x, y + 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell, ref waiting));
+                        }
+
+                        if (cells[x, y + 1].isCrystalMove && GetEmptyCellDown(x, y + 1) == cells[x, y + 1])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -478,7 +472,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x, y - 1].isChecked && !cells[x, y - 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y - 1, ref checkedCell, ref waiting));
+                        }
+
+                        if (cells[x, y - 1].isCrystalMove && GetEmptyCellDown(x, y - 1) == cells[x, y - 1])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -491,7 +490,12 @@ public class Field : MonoBehaviour {
                     {
                         if (!cells[x, y + 1].isChecked && !cells[x, y + 1].isCrystalMove)
                         {
-                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell));
+                            nearbyCells.AddRange(GetAdjacentCells(x, y + 1, ref checkedCell, ref waiting));
+                        }
+
+                        if (cells[x, y + 1].isCrystalMove && GetEmptyCellDown(x, y + 1) == cells[x, y + 1])
+                        {
+                            waiting = true;
                         }
                     }
                 }
@@ -503,35 +507,35 @@ public class Field : MonoBehaviour {
     /// <summary>
     /// Уничтожение кристалов
     /// </summary>
-    public void DestroyCrystal()
-    {
-        if (!CheckMove())
-        {
-            return;
-        }
+    //public void DestroyCrystal()
+    //{
+    //    if (!CheckMove())
+    //    {
+    //        return;
+    //    }
 
-        List<Cell> nearbyCells = new List<Cell>();
-        List<Cell> checkedCell = new List<Cell>();
-        for (int i = 0; i < 8; i++)
-        {
-            for (int j = 0; j < 8; j++)
-            {
-                if (!cells[i, j].isChecked)
-                    nearbyCells.AddRange(GetAdjacentCells(i, j, ref checkedCell));
-            }
-        }
+    //    List<Cell> nearbyCells = new List<Cell>();
+    //    List<Cell> checkedCell = new List<Cell>();
+    //    for (int i = 0; i < 8; i++)
+    //    {
+    //        for (int j = 0; j < 8; j++)
+    //        {
+    //            if (!cells[i, j].isChecked)
+    //                nearbyCells.AddRange(GetAdjacentCells(i, j, ref checkedCell));
+    //        }
+    //    }
 
-        Debug.Log(nearbyCells.Count);
-        foreach (Cell destroyCell in nearbyCells)
-        {
-            Destroy(destroyCell.crystal.gameObject);
-            destroyCell.crystal = null;
-        }
-        ResetAllCells();
-        //ResetCrystalMove();
-        //MoveCrystals();
+    //    Debug.Log(nearbyCells.Count);
+    //    foreach (Cell destroyCell in nearbyCells)
+    //    {
+    //        Destroy(destroyCell.crystal.gameObject);
+    //        destroyCell.crystal = null;
+    //    }
+    //    ResetAllCells();
+    //    //ResetCrystalMove();
+    //    //MoveCrystals();
 
-    }
+    //}
 
     /// <summary>
     /// Генерация массива с цифровыми кодами цветов ячеек
@@ -557,7 +561,10 @@ public class Field : MonoBehaviour {
         return colorList[newColor];
     }
 
-
+    /// <summary>
+    /// Добавление комбинации от стартовой клетки
+    /// </summary>
+    /// <param name="cell">Стартовая клетка</param>
     public void AddCombination(Cell cell)
     {
 
@@ -565,18 +572,43 @@ public class Field : MonoBehaviour {
         int y = cell.y;
 
         List<Cell> checkedCell = new List<Cell>();
-
-        Combination combo = new Combination(cell, GetAdjacentCells(x, y, ref checkedCell));
+        bool waiting = false;
+        Combination combo = new Combination(cell, GetAdjacentCells(x, y, ref checkedCell, ref waiting));
         ResetCell(combo.cellsInCombination);
         ResetCell(checkedCell);
-        foreach (Cell destroyCell in combo.cellsInCombination)
+
+        if (!waiting)
         {
-            destroyCell.Destroy();
+            foreach (Cell destroyCell in combo.cellsInCombination)
+            {
+                destroyCell.Destroy();
+            }
+        }
+    }
+
+    void Update()
+    {
+        if (!CheckMove())
+        {
+            onecheckOnStep = true;
+            return;
+        }
+
+        if (onecheckOnStep)
+        {
+            
+            // Код для проверки на возможность следующего ход
+            // если есть такая возможность записать все клетки будующей возможной комбинации в массив
+            // в аоследствии их будем подствечивать как подсказку
+            // иначе удалить все клетки и сгенерировать новое поле
+
+            onecheckOnStep = false;
         }
     }
 }
 
-public struct Combination
+[System.Serializable]
+public class Combination
 {
     public List<Cell> cellsInCombination;
     public Cell activeCell;
@@ -584,5 +616,25 @@ public struct Combination
     {
         activeCell = _activeCell;
         cellsInCombination = _cellsInCombination;
+    }
+    public Combination()
+    {
+        cellsInCombination = new List<Cell>();
+    }
+    public void Destroy()
+    {
+        foreach (Cell cell in cellsInCombination)
+        {
+            Debug.Log(1);
+            if (cell == null)
+                return;
+        }
+
+        foreach (Cell cell in cellsInCombination)
+        {
+            cell.Destroy();
+        }
+
+        cellsInCombination.Clear();
     }
 }
