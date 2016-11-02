@@ -46,6 +46,8 @@ public class Cell : MonoBehaviour
     {
         if (!gameField.CheckMove())
             return;
+        if (gameField.inRotate)
+            return;
         RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
         if (hit.collider != null)
         {
@@ -168,7 +170,8 @@ public class Cell : MonoBehaviour
         }
         target.crystal = from.crystal;
         target.crystal.transform.parent = target.transform;
-        target.crystal.transform.DOMove(target.transform.position, ((int)(target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(target.EndMove);
+        target.crystal.transform.DOMove(target.transform.position, ((target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(target.EndMove);
+
         from.crystal = null;
         from.isCrystalMove = false;
         target.isCrystalMove = true;
@@ -185,7 +188,7 @@ public class Cell : MonoBehaviour
         }
         target.crystal = from.crystal;
         target.crystal.transform.parent = target.transform;
-        target.crystal.transform.DOMove(target.transform.position, ((int)(target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(() => target.MoveToCell(target, gameField.GetEmptyCellDown(target.x, target.y)));
+        target.crystal.transform.DOMove(target.transform.position, ((target.crystal.transform.position - target.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(() => target.MoveToCell(target, gameField.GetEmptyCellDown(target.x, target.y)));
         from.crystal = null;
         from.isCrystalMove = false;
         target.isCrystalMove = true;
@@ -208,7 +211,7 @@ public class Cell : MonoBehaviour
                 emptyCell.crystal.SetRandomType();
                 //crystal.SwitchColor();
                 emptyCell.crystal.transform.position = gameObject.transform.position + new Vector3(0, 1 * countOfCrystal, 0);
-                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, ((int)(emptyCell.crystal.transform.position - emptyCell.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(emptyCell.EndMove);
+                emptyCell.crystal.transform.DOMove(emptyCell.transform.position, ((emptyCell.crystal.transform.position - emptyCell.transform.position).magnitude) * 0.2f).SetEase(Ease.Linear).OnComplete(emptyCell.EndMove);
                 emptyCell.isCrystalMove = true;
                 countOfCrystal++;
             }

@@ -23,6 +23,7 @@ public class Field : MonoBehaviour
     /// </summary>
     private bool onecheckOnStep;
 
+    public bool inRotate { get; private set; }
 
 
     // Use this for initialization
@@ -584,6 +585,68 @@ public class Field : MonoBehaviour
                 destroyCell.Destroy();
             }
         }
+    }
+
+    public void RoteteFieldRight()
+    {
+        if (!CheckMove())
+            return;
+        if (inRotate)
+            return;
+        inRotate = true;
+        transform.DOLocalRotate(transform.localEulerAngles + new Vector3(0, 0, -90), 0.5f).OnComplete(ReassignCellsPositionsRight);
+    }
+
+    private void ReassignCellsPositionsRight()
+    {
+        Cell[,] newList = new Cell[8, 8];
+        foreach (Cell cell in cells)
+        {
+            int x;
+            int y;
+            x = 7 - cell.y;
+            y = cell.x;
+            cell.isCellGenerate = false;
+            cell.x = x;
+            cell.y = y;
+            newList[x, y] = cell;
+            if (y == 0)
+                cell.isCellGenerate = true;
+        }
+        cells = new Cell[8, 8];
+        cells = newList;
+        inRotate = false;
+    }
+
+    public void RoteteFieldLeft()
+    {
+        if (!CheckMove())
+            return;
+        if (inRotate)
+            return;
+        inRotate = true;
+        transform.DOLocalRotate(transform.localEulerAngles + new Vector3(0, 0, 90), 0.5f).OnComplete(ReassignCellsPositionsLeft);
+    }
+
+    private void ReassignCellsPositionsLeft()
+    {
+        Cell[,] newList = new Cell[8, 8];
+        foreach (Cell cell in cells)
+        {
+            int x;
+            int y;
+            x = cell.y;
+            y = 7 - cell.x;
+            cell.isCellGenerate = false;
+            cell.x = x;
+            cell.y = y;
+            newList[x, y] = cell;
+            if (y == 0)
+                cell.isCellGenerate = true;
+        }
+        cells = new Cell[8, 8];
+        cells = newList;
+        inRotate = false;
     }
 
     void Update()
