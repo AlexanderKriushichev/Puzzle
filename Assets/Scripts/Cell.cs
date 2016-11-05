@@ -63,7 +63,7 @@ public class Cell : MonoBehaviour
         {
             if (moveVector.x > 0)
             {
-                if (x + 1 < 8)
+                if (x + 1 < Field.size)
                 {
                     ExchangeCrystal(gameField.cells[x + 1, y]);
                 }
@@ -87,7 +87,7 @@ public class Cell : MonoBehaviour
             }
             else
             {
-                if (y + 1 < 8)
+                if (y + 1 < Field.size)
                 {
                     ExchangeCrystal(gameField.cells[x, y + 1]);
                 }
@@ -143,6 +143,7 @@ public class Cell : MonoBehaviour
     private void EndMove()
     {
         isCrystalMove = false;
+        crystal.cell = this;
         gameField.AddCombination(this);
     }
 
@@ -151,8 +152,11 @@ public class Cell : MonoBehaviour
     /// </summary>
     public void Destroy()
     {
-        Destroy(crystal.gameObject);
-        crystal = null;
+        if (crystal != null)
+        {
+            Destroy(crystal.gameObject);
+            crystal = null;
+        }
     }
 
     /// <summary>

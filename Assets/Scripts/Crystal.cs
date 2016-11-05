@@ -24,7 +24,17 @@ public class Crystal : MonoBehaviour {
     /// </summary>
     public Sprite[] spritesOfCrystal = new Sprite[4];
 
+    /// <summary>
+    /// Клетка в которой находится кристал
+    /// </summary>
+    public Cell cell;
+
+    /// <summary>
+    /// Предыдущий кристал во время движения
+    /// </summary>
     private Cell previousCell;
+
+    public Bonus bonus;
 
 	// Use this for initialization
 	void Start () {
@@ -87,6 +97,10 @@ public class Crystal : MonoBehaviour {
         {
             previousCell.isCrystalIn = false;
             previousCell.CrystalMove();
+        }
+        if (bonus != null)
+        {
+            bonus.Acivate();
         }
     }
 

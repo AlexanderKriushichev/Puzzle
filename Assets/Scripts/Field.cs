@@ -7,7 +7,7 @@ using DG.Tweening;
 public class Field : MonoBehaviour
 {
 
-    public Cell[,] cells = new Cell[8, 8];
+    public Cell[,] cells = new Cell[size, size];
 
     public GameObject crystalPrefab;
 
@@ -25,6 +25,7 @@ public class Field : MonoBehaviour
 
     public bool inRotate { get; private set; }
 
+    public const int size = 8;
 
     // Use this for initialization
     void Start()
@@ -580,10 +581,25 @@ public class Field : MonoBehaviour
 
         if (!waiting)
         {
+            int ID = combo.activeCell.crystal.colorID;
             foreach (Cell destroyCell in combo.cellsInCombination)
             {
                 destroyCell.Destroy();
             }
+            //if (combo.cellsInCombination.Count != 0)
+            //{
+            //    GameObject initCell = (GameObject)Instantiate(crystalPrefab, combo.activeCell.transform);
+            //    initCell.transform.parent = combo.activeCell.transform;
+            //    initCell.transform.position = combo.activeCell.transform.position;
+            //    Crystal initCrystal = initCell.GetComponent<Crystal>();
+            //    initCrystal.SetRandomType(ID);
+            //    initCrystal.bonus = new LineBonus(TypeLineBonus.Verical, this, initCrystal);
+            //    initCrystal.cell = combo.activeCell;
+            //    initCrystal.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
+            //    combo.activeCell.crystal = initCrystal;
+            //    combo.activeCell.CrystalMove();
+            //}
+
         }
     }
 
@@ -599,7 +615,7 @@ public class Field : MonoBehaviour
 
     private void ReassignCellsPositionsRight()
     {
-        Cell[,] newList = new Cell[8, 8];
+        Cell[,] newList = new Cell[size, size];
         foreach (Cell cell in cells)
         {
             int x;
@@ -613,7 +629,7 @@ public class Field : MonoBehaviour
             if (y == 0)
                 cell.isCellGenerate = true;
         }
-        cells = new Cell[8, 8];
+        cells = new Cell[size, size];
         cells = newList;
         inRotate = false;
     }
@@ -630,7 +646,7 @@ public class Field : MonoBehaviour
 
     private void ReassignCellsPositionsLeft()
     {
-        Cell[,] newList = new Cell[8, 8];
+        Cell[,] newList = new Cell[size, size];
         foreach (Cell cell in cells)
         {
             int x;
@@ -644,7 +660,7 @@ public class Field : MonoBehaviour
             if (y == 0)
                 cell.isCellGenerate = true;
         }
-        cells = new Cell[8, 8];
+        cells = new Cell[size, size];
         cells = newList;
         inRotate = false;
     }
