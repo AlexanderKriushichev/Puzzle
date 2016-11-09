@@ -44,13 +44,12 @@ public class Field : MonoBehaviour
             {
                 GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
                 initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
-                //initCell.GetComponent<Crystal>().SwitchColor();
                 cells[cell.x, cell.y].crystal = initCell.GetComponent<Crystal>();
                 cells[cell.x, cell.y].crystal.previousCell = cells[cell.x, cell.y];
                 cells[cell.x, cell.y].crystal.cell = cells[cell.x, cell.y];
                 cells[cell.x, cell.y].isCrystalIn = true;
                 cells[cell.x, cell.y].crystal.transform.position = cells[cell.x, cell.y].transform.position + new Vector3(0, 1, 0);
-                cells[cell.x, cell.y].crystal.transform.DOMove(cells[cell.x, cell.y].transform.position, 0.5f).OnComplete(delegate { ResetCrystalMove(); });
+                cells[cell.x, cell.y].crystal.transform.DOMove(cells[cell.x, cell.y].transform.position, 0.15f).SetEase(cells[cell.x, cell.y].crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
                 cells[cell.x, cell.y].isCrystalMove = true;
                 cells[cell.x, cell.y].gameField = this;
             }
@@ -62,6 +61,36 @@ public class Field : MonoBehaviour
 
 
 
+    }
+
+    void GenerateField()
+    {
+        foreach (Cell cell in cells)
+        {
+            if (!cell.isBarrier && cell.crystal==null)
+            {
+                GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
+                initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
+                cell.crystal = initCell.GetComponent<Crystal>();
+                cell.crystal.previousCell = cell;
+                cell.crystal.cell = cell;
+                cell.isCrystalIn = true;
+                cell.crystal.transform.position = cell.transform.position + new Vector3(0, 1, 0);
+                cell.crystal.transform.DOMove(cell.transform.position, 0.15f).SetEase(cell.crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
+                cell.isCrystalMove = true;
+            }
+        }
+    }
+
+    void DeleteField()
+    {
+        foreach (Cell cell in cells)
+        {
+            if (!cell.isBarrier && cell.crystal != null)
+            {
+                cell.DestroyCrystal();
+            }
+        }
     }
 
     void ResetAllCells()
@@ -690,6 +719,7 @@ public class Field : MonoBehaviour
     {
         bool move = false;
 
+
         if (moveComplite)
         {
             if (combinations.Count != 0)
@@ -720,7 +750,7 @@ public class Field : MonoBehaviour
                                 {
                                     findComplite = !move && moveCrystals.Count == 0;
                                     return;
-                                }
+                                } 
                             }
                             else
                             {
@@ -733,7 +763,7 @@ public class Field : MonoBehaviour
                                         {
                                             findComplite = !move && moveCrystals.Count == 0;
                                             return;
-                                        }
+                                        } 
                                     }
                                     else
                                     {
@@ -746,7 +776,7 @@ public class Field : MonoBehaviour
                                                 {
                                                     findComplite = !move && moveCrystals.Count == 0;
                                                     return;
-                                                }
+                                                } 
                                             }
                                         }
                                     }
@@ -762,7 +792,7 @@ public class Field : MonoBehaviour
                                             {
                                                 findComplite = !move && moveCrystals.Count == 0;
                                                 return;
-                                            }
+                                            } 
                                         }
                                     }
                                 }
@@ -851,16 +881,25 @@ public class Field : MonoBehaviour
     {
 
         FindWayFromCrystals();
-        
-        if (onecheckOnStep)
-        {
-            
-            // Код для проверки на возможность следующего ход
-            // если есть такая возможность записать все клетки будующей возможной комбинации в массив
-            // в аоследствии их будем подствечивать как подсказку
-            // иначе удалить все клетки и сгенерировать новое поле
 
-            onecheckOnStep = false;
+        if (findComplite && CheckMove() && combinations.Count == 0)
+        {
+            bool check = false;
+            foreach (Cell cell in cells)
+            {
+                Cell target = FindPossibleCombination(cell);
+                if (target != null)
+                {
+                    check = true;
+                    break;
+                }
+            }
+            if (!check)
+            {
+                Debug.Log("Нет ходов");
+                DeleteField();
+                GenerateField();
+            }
         }
     }
 }
