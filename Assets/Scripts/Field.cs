@@ -16,12 +16,18 @@ public class Field : MonoBehaviour
     /// <summary>
     /// Комбинации
     /// </summary>
-    private List<Combination> combinations = new List<Combination>();
+    public List<Combination> combinations = new List<Combination>();
 
     /// <summary>
     /// Флаг для проведения одной проверки на возможность хода за ход
     /// </summary>
     private bool onecheckOnStep;
+
+    public List<Crystal> moveCrystals = new List<Crystal>();
+
+    private bool moveComplite = true;
+
+    public bool findComplite = true;
 
     public bool inRotate { get; private set; }
 
@@ -40,6 +46,9 @@ public class Field : MonoBehaviour
                 initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
                 //initCell.GetComponent<Crystal>().SwitchColor();
                 cells[cell.x, cell.y].crystal = initCell.GetComponent<Crystal>();
+                cells[cell.x, cell.y].crystal.previousCell = cells[cell.x, cell.y];
+                cells[cell.x, cell.y].crystal.cell = cells[cell.x, cell.y];
+                cells[cell.x, cell.y].isCrystalIn = true;
                 cells[cell.x, cell.y].crystal.transform.position = cells[cell.x, cell.y].transform.position + new Vector3(0, 1, 0);
                 cells[cell.x, cell.y].crystal.transform.DOMove(cells[cell.x, cell.y].transform.position, 0.5f).OnComplete(delegate { ResetCrystalMove(); });
                 cells[cell.x, cell.y].isCrystalMove = true;
@@ -106,28 +115,28 @@ public class Field : MonoBehaviour
     public bool CheckNearCombination(int x, int y, Cell target)
     {
         if (x > 1)
-            if (cells[x - 1, y].crystal != null && cells[x - 2, y].crystal != null)
+            if (cells[x - 1, y].crystal != null && cells[x - 2, y].crystal != null && target.crystal != null)
                 if (cells[x - 1, y].crystal.type == target.crystal.type && cells[x - 2, y].crystal.type == target.crystal.type && cells[x - 1, y] != target && !cells[x - 1, y].isCrystalMove)
                     return true;
         if (x > 0 && x < 7)
-            if (cells[x - 1, y].crystal != null && cells[x + 1, y].crystal != null)
+            if (cells[x - 1, y].crystal != null && cells[x + 1, y].crystal != null && target.crystal != null)
                 if (cells[x - 1, y].crystal.type == target.crystal.type && cells[x + 1, y].crystal.type == target.crystal.type && cells[x - 1, y] != target && cells[x + 1, y] != target && !cells[x - 1, y].isCrystalMove && !cells[x + 1, y].isCrystalMove)
                     return true;
         if (x < 6)
-            if (cells[x + 1, y].crystal != null && cells[x + 2, y].crystal != null)
+            if (cells[x + 1, y].crystal != null && cells[x + 2, y].crystal != null && target.crystal != null)
                 if (cells[x + 1, y].crystal.type == target.crystal.type && cells[x + 2, y].crystal.type == target.crystal.type && cells[x + 1, y] != target && !cells[x + 1, y].isCrystalMove)
                     return true;
 
         if (y > 1)
-            if (cells[x, y - 1].crystal != null && cells[x, y - 2].crystal != null)
+            if (cells[x, y - 1].crystal != null && cells[x, y - 2].crystal != null && target.crystal!=null)
                 if (cells[x, y - 1].crystal.type == target.crystal.type && cells[x, y - 2].crystal.type == target.crystal.type && cells[x, y - 1] != target && !cells[x, y - 1].isCrystalMove)
                     return true;
         if (y > 0 && y < 7)
-            if (cells[x, y - 1].crystal != null && cells[x, y + 1].crystal != null)
+            if (cells[x, y - 1].crystal != null && cells[x, y + 1].crystal != null && target.crystal != null)
                 if (cells[x, y - 1].crystal.type == target.crystal.type && cells[x, y + 1].crystal.type == target.crystal.type && cells[x, y - 1] != target && cells[x, y + 1] != target && !cells[x, y - 1].isCrystalMove && !cells[x, y + 1].isCrystalMove)
                     return true;
         if (y < 6)
-            if (cells[x, y + 1].crystal != null && cells[x, y + 2].crystal != null)
+            if (cells[x, y + 1].crystal != null && cells[x, y + 2].crystal != null && target.crystal != null)
                 if (cells[x, y + 1].crystal.type == target.crystal.type && cells[x, y + 2].crystal.type == target.crystal.type && cells[x, y + 1] != target && !cells[x, y + 1].isCrystalMove)
                     return true;
         return false;
@@ -581,24 +590,7 @@ public class Field : MonoBehaviour
 
         if (!waiting)
         {
-            int ID = combo.activeCell.crystal.colorID;
-            foreach (Cell destroyCell in combo.cellsInCombination)
-            {
-                destroyCell.Destroy();
-            }
-            //if (combo.cellsInCombination.Count != 0)
-            //{
-            //    GameObject initCell = (GameObject)Instantiate(crystalPrefab, combo.activeCell.transform);
-            //    initCell.transform.parent = combo.activeCell.transform;
-            //    initCell.transform.position = combo.activeCell.transform.position;
-            //    Crystal initCrystal = initCell.GetComponent<Crystal>();
-            //    initCrystal.SetRandomType(ID);
-            //    initCrystal.bonus = new LineBonus(TypeLineBonus.Verical, this, initCrystal);
-            //    initCrystal.cell = combo.activeCell;
-            //    initCrystal.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0.5f, 0.5f);
-            //    combo.activeCell.crystal = initCrystal;
-            //    combo.activeCell.CrystalMove();
-            //}
+            combinations.Add(combo);
 
         }
     }
@@ -665,14 +657,201 @@ public class Field : MonoBehaviour
         inRotate = false;
     }
 
-    void Update()
+    public Cell FindPossibleCombination(Cell cell)
     {
-        if (!CheckMove())
+        if (cell.crystal == null)
+            return null;
+        if (cell.x > 0)
         {
-            onecheckOnStep = true;
-            return;
+            if (CheckNearCombination(cell.x, cell.y, cells[cell.x - 1, cell.y]))
+                return cells[cell.x - 1, cell.y];
+        }
+        if (cell.x < size-1)
+        {
+            if (CheckNearCombination(cell.x, cell.y, cells[cell.x + 1, cell.y]))
+                return cells[cell.x + 1, cell.y];
         }
 
+        if (cell.y > 0)
+        {
+            if (CheckNearCombination(cell.x, cell.y, cells[cell.x, cell.y - 1]))
+                return cells[cell.x, cell.y - 1];
+        }
+        if (cell.y < size - 1)
+        {
+            if (CheckNearCombination(cell.x, cell.y, cells[cell.x, cell.y + 1]))
+                return cells[cell.x, cell.y + 1];
+        }
+
+        return null;
+    }
+
+    private void FindWayFromCrystals()
+    {
+        bool move = false;
+
+        if (moveComplite)
+        {
+            if (combinations.Count != 0)
+            {
+                foreach (Combination combo in combinations)
+                {
+                    foreach (Cell cell in combo.cellsInCombination)
+                    {
+                        cell.DestroyCrystal();
+                    }
+                }
+
+                combinations.Clear();
+            }
+
+            for (int j = 0; j < size; j++)
+            {
+                for (int i = 0; i < size; i++)
+                {
+                    if (cells[i, j].crystal != null)
+                    {
+                        if (j < size - 1)
+                        {
+                            if (cells[i, j + 1].crystal == null && !cells[i, j + 1].isBarrier )
+                            {
+                                move = true;
+                                if (!AddWayPoint(i,j,0,1))
+                                {
+                                    findComplite = !move && moveCrystals.Count == 0;
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                if (i > 0)
+                                {
+                                    if (cells[i - 1, j].crystal == null && cells[i - 1, j + 1].crystal == null && !cells[i - 1, j + 1].isBarrier && !cells[i - 1, j ].isCellGenerate)
+                                    {
+                                        move = true;
+                                        if (!AddWayPoint(i, j, -1, 1))
+                                        {
+                                            findComplite = !move && moveCrystals.Count == 0;
+                                            return;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (i < size - 1)
+                                        {
+                                            if (cells[i + 1, j].crystal == null && cells[i + 1, j + 1].crystal == null && !cells[i + 1, j + 1].isBarrier && !cells[i + 1, j].isCellGenerate)
+                                            {
+                                                move = true;
+                                                if (!AddWayPoint(i, j, 1, 1))
+                                                {
+                                                    findComplite = !move && moveCrystals.Count == 0;
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (i < size - 1)
+                                    {
+                                        if (cells[i + 1, j].crystal == null && cells[i + 1, j + 1].crystal == null && !cells[i + 1, j + 1].isBarrier && !cells[i + 1, j].isCellGenerate)
+                                        {
+                                            move = true;
+                                            if (!AddWayPoint(i, j, 1, 1))
+                                            {
+                                                findComplite = !move && moveCrystals.Count == 0;
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (cells[i, j].isCellGenerate)
+                        {
+                            GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[i, j].transform);
+                            cells[i, j].crystal = initCell.GetComponent<Crystal>();
+                            cells[i, j].crystal.SetRandomType();
+                            cells[i, j].crystal.transform.position = cells[i, j].transform.position + new Vector3(0, 1, 0);
+                            cells[i, j].crystal.previousCell = cells[i, j];
+                            cells[i, j].crystal.cell = cells[i, j];
+                            cells[i, j].crystal.MoveToGeneratorCell();
+                            cells[i, j].isCrystalIn = true;
+                            if (moveCrystals.Find(x => x == cells[i, j].crystal) == null)
+                            {
+                                moveCrystals.Add(cells[i, j].crystal);
+                            }
+                            findComplite = !move && moveCrystals.Count == 0;
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        findComplite = !move && moveCrystals.Count == 0;
+
+        if (!move)
+        {
+            moveComplite = false;
+            if (moveCrystals.Count == 0)
+            {
+                moveComplite = true;
+                return;
+            }
+            for (int i = 0; i < moveCrystals.Count; i++)
+            {
+                if (moveCrystals[i].moveWayPoints.Count == 0)
+                {
+                    moveCrystals.RemoveAt(i);
+                    break;
+                }
+                moveCrystals[i].MoveOnWay();                
+            }
+        }
+    }
+
+    private bool AddWayPoint(int i, int j, int x, int y)
+    {
+        cells[i, j].crystal.AddPoint(cells[i + x, j + y]);
+        cells[i + x, j + y].crystal = cells[i, j].crystal;
+        cells[i, j].crystal = null;
+        if (moveCrystals.Find(element => element == cells[i+x, j + y].crystal) == null)
+        {
+            moveCrystals.Add(cells[i+x, j + y].crystal);
+        }
+        if (cells[i, j].isCellGenerate)
+        {
+            GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[i, j].transform);
+            cells[i, j].crystal = initCell.GetComponent<Crystal>();
+            cells[i, j].crystal.SetRandomType();
+            cells[i, j].crystal.transform.position = cells[i, j].transform.position + new Vector3(0, 1, 0);
+            cells[i, j].crystal.previousCell = cells[i, j];
+            cells[i, j].crystal.cell = cells[i, j];
+            cells[i, j].crystal.AddPoint(cells[i, j]);
+            if (moveCrystals.Find(element => element == cells[i, j].crystal) == null)
+            {
+                moveCrystals.Add(cells[i, j].crystal);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private void DestroyAllCombiantion()
+    {
+        //foreach()
+    }
+
+    void Update()
+    {
+
+        FindWayFromCrystals();
+        
         if (onecheckOnStep)
         {
             
@@ -711,9 +890,18 @@ public class Combination
 
         foreach (Cell cell in cellsInCombination)
         {
-            cell.Destroy();
+            cell.DestroyCrystal();
         }
 
         cellsInCombination.Clear();
+    }
+    public bool FullCombo()
+    {
+        foreach (Cell cell in cellsInCombination)
+        {
+            if (cell.crystal == null)
+                return false;  
+        }
+        return true;
     }
 }

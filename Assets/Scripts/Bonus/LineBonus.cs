@@ -10,25 +10,25 @@
 
     public override void Acivate()
     {
-        switch (type)
-        {
-            case TypeLineBonus.Horizontal:
-                {
-                    for (int i = 0; i < Field.size; i++)
-                    {
-                        field.cells[i, crystal.cell.y].Destroy();
-                    }
-                    break;
-                }
-            case TypeLineBonus.Verical:
-                {
-                    for (int i = 0; i < Field.size; i++)
-                    {
-                        field.cells[crystal.cell.x, i].Destroy();
-                    }
-                    break;
-                }
-        }
+        //switch (type)
+        //{
+        //    case TypeLineBonus.Horizontal:
+        //        {
+        //            for (int i = 0; i < Field.size; i++)
+        //            {
+        //                field.cells[i, crystal.cell.y].DestroyForTime(0.2f, 1f);
+        //            }
+        //            break;
+        //        }
+        //    case TypeLineBonus.Verical:
+        //        {
+        //            for (int i = 0; i < Field.size; i++)
+        //            {
+        //                field.cells[crystal.cell.x, i].DestroyForTime(0.2f, 1f);
+        //            }
+        //            break;
+        //        }
+        //}
     }
 
 }
