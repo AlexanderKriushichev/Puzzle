@@ -12,6 +12,9 @@ public class Auto : MonoBehaviour {
 	
 	// Update is called once per frame
 	void LateUpdate () {
+        field.Update();
+        if (field.moveCrystals.Count != 0)
+            return;
         if (field.findComplite && field.CheckMove() && field.combinations.Count == 0)
         {
             foreach (Cell cell in field.cells)

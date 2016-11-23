@@ -28,6 +28,10 @@ public class Cell : MonoBehaviour
 
     public bool isAddInList;
 
+    public List<Crystal> listCrystalMove = new List<Crystal>();
+
+    public List<Cell> cellInCombination = new List<Cell>();
+
     private Vector2 startPositionOfMouse;
 
     private SpriteRenderer spriteRenderer;
@@ -52,6 +56,8 @@ public class Cell : MonoBehaviour
         if (!gameField.CheckMove())
             return;
         if (gameField.inRotate)
+            return;
+        if (gameField.moveCrystals.Count != 0)
             return;
         RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
         if (hit.collider != null)
@@ -111,15 +117,138 @@ public class Cell : MonoBehaviour
         {
             isCrystalMove = true;
             target.isCrystalMove = true;
+
+            if (crystal.bonus != null && target.crystal.bonus != null)
+            {
+                if (crystal.bonus.GetType() == typeof(LineBonus) && target.crystal.bonus.GetType() == typeof(LineBonus))
+                {
+                    crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(delegate { DestroyCrystal(); target.DestroyCrystal(); });
+                    if (target.x == x)
+                    {
+                        crystal.bonus.type = TypeLineBonus.Verical;
+                        target.crystal.bonus.type = TypeLineBonus.Horizontal;
+                    }
+                    else
+                    {
+                        target.crystal.bonus.type = TypeLineBonus.Verical;
+                        crystal.bonus.type = TypeLineBonus.Horizontal;
+                    }
+                    return;
+                }
+
+                if ((crystal.bonus.GetType() == typeof(BoxBonus) && target.crystal.bonus.GetType() == typeof(LineBonus)) || (crystal.bonus.GetType() == typeof(LineBonus) && target.crystal.bonus.GetType() == typeof(BoxBonus)))
+                {
+                    Destroy(crystal.bonus);
+                    Destroy(target.crystal.bonus);
+
+                    List<Cell> destroyCellList = new List<Cell>();
+                    destroyCellList.Add(this);
+
+                    crystal.spriteRenderer.sortingOrder = 0;
+                    target.spriteRenderer.sortingOrder = 0;
+
+                    destroyCellList.Add(target);
+                    if (target.x == x)
+                    {
+                        LineBonus lineBonus = crystal.gameObject.AddComponent<LineBonus>();
+                        lineBonus.Line(TypeLineBonus.Verical, gameField, crystal);
+                        lineBonus.SetEffect(crystal.InitLineEffect(), crystal.lineSprite);
+                        lineBonus.OffAnim();
+                        crystal.bonus = lineBonus;
+
+                        lineBonus = target.crystal.gameObject.AddComponent<LineBonus>();
+                        lineBonus.Line(TypeLineBonus.Horizontal, gameField, target.crystal);
+                        lineBonus.SetEffect(target.crystal.InitLineEffect(), target.crystal.lineSprite);
+                        lineBonus.OffAnim();
+                        target.crystal.bonus = lineBonus;
+
+                    }
+                    else
+                    {
+                        LineBonus lineBonus = crystal.gameObject.AddComponent<LineBonus>();
+                        lineBonus.Line(TypeLineBonus.Horizontal, gameField, crystal);
+                        lineBonus.SetEffect(crystal.InitLineEffect(), crystal.lineSprite);
+                        lineBonus.OffAnim();
+                        crystal.bonus = lineBonus;
+
+                        lineBonus = target.crystal.gameObject.AddComponent<LineBonus>();
+                        lineBonus.Line(TypeLineBonus.Verical, gameField, target.crystal);
+                        lineBonus.SetEffect(target.crystal.InitLineEffect(), target.crystal.lineSprite);
+                        lineBonus.OffAnim();
+                        target.crystal.bonus = lineBonus;
+                    }
+
+                    if (target.x > 0)
+                    {
+                        LineBonus.DestroyCell(target.x - 1, target.y, TypeLineBonus.Verical);
+                    }
+
+                    if (target.x < Field.size-1)
+                    {
+                        LineBonus.DestroyCell(target.x + 1, target.y, TypeLineBonus.Verical);
+                    }
+
+                    if (target.y > 0)
+                    {
+                        LineBonus.DestroyCell(target.x, target.y - 1, TypeLineBonus.Horizontal);
+                    }
+
+                    if (target.y < Field.size - 1)
+                    {
+                        LineBonus.DestroyCell(target.x, target.y + 1,TypeLineBonus.Horizontal);
+                    }
+                    crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(
+                        delegate 
+                        {
+                            crystal.spriteRenderer.sortingOrder = 0;
+                            target.spriteRenderer.sortingOrder = 0;
+
+                            foreach (Cell cellDestroy in destroyCellList)
+                            {
+                                cellDestroy.DestroyCrystal();
+                            }
+                        });
+                    return;
+
+                }
+                if (crystal.bonus.GetType() == typeof(BoxBonus) && target.crystal.bonus.GetType() == typeof(BoxBonus))
+                {
+                    Destroy(crystal.bonus);
+                    Destroy(target.crystal.bonus);
+
+                    BoxBonus lineBonus = target.crystal.gameObject.AddComponent<BoxBonus>();
+                    lineBonus.Box(gameField, target.crystal);
+                    lineBonus.SetEffect(target.crystal.InitBoxEffect(), target.crystal.colorsBoxBonus[target.crystal.colorID]);
+                    lineBonus.AreaSize = 2;
+                    target.crystal.bonus = lineBonus;
+                    target.crystal.spriteRenderer.sortingOrder += 2;
+                    target.crystal.spriteRenderer.sprite = target.crystal.spriteOfBoxEffect[target.crystal.colorID];
+                    crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.DestroyCrystal);
+                    return;
+                }
+            }
+
+
+
             if (gameField.CheckNearCombination(x, y, target) || gameField.CheckNearCombination(target.x, target.y, this))
             {
                 crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(EndMove);
-                target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.EndMove); ;
+                target.crystal.transform.DOMove(transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.EndMove);
 
                 Crystal obm;
                 obm = crystal;
                 crystal = target.crystal;
                 target.crystal = obm;
+                target.crystal.cell = this;
+                target.crystal.previousCell = this;
+                crystal.cell = target;
+                crystal.previousCell = target;
+
+                if (y == target.y)
+                {
+                    target.crystal.typeOfLine = TypeLineBonus.Horizontal;
+                    crystal.typeOfLine = TypeLineBonus.Horizontal;
+                }
             }
             else
             {
@@ -149,10 +278,9 @@ public class Cell : MonoBehaviour
     {
         isCrystalMove = false;
         crystal.cell = this;
+        crystal.previousCell = this;
         gameField.AddCombination(this);
     }
-
-
 
     /// <summary>
     /// Уничтожение кристала
@@ -161,10 +289,50 @@ public class Cell : MonoBehaviour
     {
         if (crystal != null)
         {
-            isCrystalMove = false;
-            Destroy(crystal.gameObject);
-            crystal = null;
-            isCrystalIn = false;
+            if (crystal.bonus == null)
+            {
+                isCrystalMove = false;
+                Destroy(crystal.gameObject);
+                //if (cellInCombination.Count != 0)
+                //{
+                //    foreach (Cell cell in cellInCombination)
+                //    {
+                //        if (cell!=this)
+                //            cell.DestroyCrystal();
+                //    }
+                //}
+                cellInCombination.Clear();
+                crystal = null;
+                isCrystalIn = false;
+            }
+            else
+            {
+                if (!crystal.bonus.bounceComplite)
+                {
+                    if (!crystal.bonus.bounceStart)
+                    {
+                        //crystal.DestroySprite();
+                        crystal.bonus.Acivate();
+                        cellInCombination.Clear();
+                    }
+                }
+                else
+                {
+                    isCrystalMove = false;
+                    Destroy(crystal.gameObject);
+                    //if (cellInCombination.Count != 0)
+                    //{
+                    //    foreach (Cell cell in cellInCombination)
+                    //    {
+                    //        if (cell != this)
+                    //            cell.DestroyCrystal();
+                    //    }
+                    //}
+                    cellInCombination.Clear();
+                    crystal = null;
+                    isCrystalIn = false;
+                }
+            }
         }
         isCrystalMove = false;
     }

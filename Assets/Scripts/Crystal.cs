@@ -19,7 +19,8 @@ public class Crystal : MonoBehaviour {
     /// <summary>
     /// Отрисовка
     /// </summary>
-    private SpriteRenderer spriteRenderer;
+    [HideInInspector]
+    public SpriteRenderer spriteRenderer;
 
     /// <summary>
     ///  Массив спрайтов для отрисовки кристаллов
@@ -36,10 +37,21 @@ public class Crystal : MonoBehaviour {
     /// </summary>
     public Cell previousCell;
 
+    [HideInInspector]
     public Bonus bonus;
 
+    [Header("LineBonus")]
+    public GameObject lineEffectPrefab;
+    public Sprite lineSprite;
     public TypeLineBonus typeOfLine = TypeLineBonus.Verical;
 
+    [Space(10)]
+    [Header("BoxBonus")]
+    public GameObject boxEffectPrefab;
+    public List<Color> colorsBoxBonus = new List<Color>();
+    public List<Sprite> spriteOfBoxEffect = new List<Sprite>();
+
+    [Space(10)]
     public List<Cell> moveWayPoints = new List<Cell>();
 
     public bool compliteMove;
@@ -116,14 +128,18 @@ public class Crystal : MonoBehaviour {
 
         if (moveWayPoints.Count != 0)
         {
+            if (moveWayPoints[0].listCrystalMove.Count > 0)
+                if (moveWayPoints[0].listCrystalMove[0] != this)
+                    return;
             Cell target = moveWayPoints[0];
             if (moveWayPoints.Count > 1)
             {
-                if (!isMove && !moveWayPoints[0].isCrystalMove)
+                if (!isMove && !moveWayPoints[0].isCrystalMove && !moveWayPoints[0].isCrystalIn)
                 {
                     transform.DOMove(moveWayPoints[0].transform.position, 0.15f).SetEase(Ease.Linear).OnComplete(
                         delegate
                         {
+                            moveWayPoints[0].listCrystalMove.RemoveAt(0);
                             moveWayPoints.RemoveAt(0);
                             isMove = false;
                             target.isCrystalMove = false;
@@ -140,11 +156,12 @@ public class Crystal : MonoBehaviour {
             {
                 if (moveWayPoints.Count == 1)
                 {
-                    if (!isMove && !moveWayPoints[0].isCrystalMove)
+                    if (!isMove && !moveWayPoints[0].isCrystalMove && !moveWayPoints[0].isCrystalIn)
                     {
                         transform.DOMove(moveWayPoints[0].transform.position, 0.15f).SetEase(curve).OnComplete(
                             delegate
                             {
+                                moveWayPoints[0].listCrystalMove.RemoveAt(0);
                                 moveWayPoints.RemoveAt(0);
                                 isMove = false;
                                 target.isCrystalMove = false;
@@ -177,7 +194,27 @@ public class Crystal : MonoBehaviour {
 
     public void MoveToGeneratorCell()
     {
-        transform.DOMove(cell.transform.position, 0.15f).SetEase(curve);         
+        transform.DOMove(cell.transform.position, 0.15f).SetEase(curve).OnComplete(
+            delegate
+            {
+                cell.listCrystalMove.RemoveAt(0);
+                isMove = false;
+                compliteMove = true;
+                cell.gameField.AddCombination(cell);
+                transform.parent = cell.transform;
+                cell.isCrystalIn = true;
+                cell.isCrystalMove = false;
+            });         
+    }
+
+    public GameObject InitLineEffect()
+    {
+        return (GameObject)Instantiate(lineEffectPrefab, this.transform.position, this.transform.rotation);
+    }
+
+    public GameObject InitBoxEffect()
+    {
+        return (GameObject)Instantiate(boxEffectPrefab, this.transform.position, this.transform.rotation);
     }
 
     /// <summary>
@@ -201,19 +238,22 @@ public class Crystal : MonoBehaviour {
         moveWayPoints.Add(point);
     }
 
- 
-    //void OnDestroy()
-    //{
-    //    if (previousCell != null)
-    //    {
-    //        previousCell.isCrystalIn = false;
-    //        previousCell.CrystalMove();
-    //    }
-    //    if (bonus != null)
-    //    {
-    //        bonus.Acivate();
-    //    }
-    //}
+    public void DestroySprite()
+    {
+        Destroy(spriteRenderer);
+    }
+
+    void OnDestroy()
+    {
+        if (cell != null)
+        {
+            cell.isCrystalIn = false;
+        }
+        //if (bonus != null)
+        //{
+        //    bonus.Acivate();
+        //}
+    }
 }
 
 /// <summary>
