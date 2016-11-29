@@ -183,7 +183,7 @@ public class Cell : MonoBehaviour
                         LineBonus.DestroyCell(target.x - 1, target.y, TypeLineBonus.Verical);
                     }
 
-                    if (target.x < Field.size-1)
+                    if (target.x < Field.size - 1)
                     {
                         LineBonus.DestroyCell(target.x + 1, target.y, TypeLineBonus.Verical);
                     }
@@ -195,10 +195,10 @@ public class Cell : MonoBehaviour
 
                     if (target.y < Field.size - 1)
                     {
-                        LineBonus.DestroyCell(target.x, target.y + 1,TypeLineBonus.Horizontal);
+                        LineBonus.DestroyCell(target.x, target.y + 1, TypeLineBonus.Horizontal);
                     }
                     crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(
-                        delegate 
+                        delegate
                         {
                             crystal.spriteRenderer.sortingOrder = 0;
                             target.spriteRenderer.sortingOrder = 0;
@@ -225,6 +225,28 @@ public class Cell : MonoBehaviour
                     target.crystal.spriteRenderer.sprite = target.crystal.spriteOfBoxEffect[target.crystal.colorID];
                     crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.DestroyCrystal);
                     return;
+                }
+                
+            }
+            else
+            {
+                if (crystal.bonus != null)
+                {
+                    if (crystal.bonus.GetType() == typeof(StarBonus))
+                    {
+                        crystal.GetComponent<StarBonus>().SetType(target.crystal.type);
+                        crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(DestroyCrystal);
+                        return;
+                    }
+                }
+                if (target.crystal.bonus != null)
+                {
+                    if (target.crystal.bonus.GetType() == typeof(StarBonus))
+                    {
+                        target.crystal.GetComponent<StarBonus>().SetType(crystal.type);
+                        crystal.transform.DOMove(target.transform.position, 0.2f).SetEase(Ease.InSine).OnComplete(target.DestroyCrystal);
+                        return;
+                    }
                 }
             }
 

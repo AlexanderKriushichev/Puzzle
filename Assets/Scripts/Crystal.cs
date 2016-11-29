@@ -45,13 +45,18 @@ public class Crystal : MonoBehaviour {
     public Sprite lineSprite;
     public TypeLineBonus typeOfLine = TypeLineBonus.Verical;
 
-    [Space(10)]
     [Header("BoxBonus")]
     public GameObject boxEffectPrefab;
     public List<Color> colorsBoxBonus = new List<Color>();
     public List<Sprite> spriteOfBoxEffect = new List<Sprite>();
 
-    [Space(10)]
+    [Header("StarBonus")]
+    public GameObject lizerPrefab;
+    public Sprite starSprite;
+    public GameObject starArial;
+    public Color firstColorArial;
+    public Color secondColorArial;
+
     public List<Cell> moveWayPoints = new List<Cell>();
 
     public bool compliteMove;
@@ -217,6 +222,11 @@ public class Crystal : MonoBehaviour {
         return (GameObject)Instantiate(boxEffectPrefab, this.transform.position, this.transform.rotation);
     }
 
+    public GameObject InitStarArialEffect()
+    {
+        return (GameObject)Instantiate(starArial, this.transform.position, this.transform.rotation);
+    }
+
     /// <summary>
     /// Перемещается ли кристалл вбок
     /// </summary>
@@ -259,4 +269,4 @@ public class Crystal : MonoBehaviour {
 /// <summary>
 /// Тип цвета кристалла
 /// </summary>
-public enum TypeOfCrystal { triangle, sphere, rhomb, rectangle, pentagon, hexagon }
+public enum TypeOfCrystal { triangle, sphere, rhomb, rectangle, pentagon, hexagon, star }

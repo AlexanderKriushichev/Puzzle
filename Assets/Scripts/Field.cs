@@ -877,20 +877,20 @@ public class Field : MonoBehaviour
                             {
                                 int x = combo.activeCell.x;
                                 int y = combo.activeCell.y;
-                                bool xLine = true;
-                                bool yLine = true;
+                                int xCount = 0;
+                                int yCount = 0;
                                 for (int i = 0; i < combo.cellsInCombination.Count; i++)
                                 {
                                     if (combo.cellsInCombination[i].x != x)
                                     {
-                                        xLine = false;
+                                        xCount++;
                                     }
                                     if (combo.cellsInCombination[i].y != y)
                                     {
-                                        yLine = false;
+                                        yCount++;
                                     }
                                 }
-                                if (!xLine && !yLine)
+                                if (xCount<4 && yCount<4)
                                 {
                                     if (combo.activeCell.crystal.bonus == null)
                                     {
@@ -918,9 +918,29 @@ public class Field : MonoBehaviour
                                 }
                                 else
                                 {
-                                    foreach (Cell cell in combo.cellsInCombination)
+                                    if (combo.activeCell.crystal.bonus == null)
                                     {
-                                        cell.DestroyCrystal();
+                                        StarBonus starBonus = combo.activeCell.crystal.gameObject.AddComponent<StarBonus>();
+                                        combo.activeCell.crystal.bonus = starBonus;
+                                        starBonus.Star(this, combo.activeCell.crystal);
+                                        starBonus.SetEffect(combo.activeCell.crystal.lizerPrefab, combo.activeCell.crystal.InitStarArialEffect(), combo.activeCell.crystal.InitStarArialEffect(), combo.activeCell.crystal.firstColorArial, combo.activeCell.crystal.secondColorArial);
+                                        combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.starSprite;
+                                        combo.activeCell.crystal.spriteRenderer.sortingOrder = 1;
+                                        combo.activeCell.crystal.type = TypeOfCrystal.star;
+                                        foreach (Cell cell in combo.cellsInCombination)
+                                        {
+                                            if (cell != combo.activeCell)
+                                                cell.DestroyCrystal();
+                                        }
+                                        combo.activeCell.cellInCombination.Clear();
+                                    }
+                                    else
+                                    {
+                                        foreach (Cell cell in combo.cellsInCombination)
+                                        {
+                                            cell.DestroyCrystal();
+                                        }
+                                        break;
                                     }
                                 }
                                 break;
