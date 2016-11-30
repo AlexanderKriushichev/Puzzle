@@ -36,6 +36,11 @@ public class Cell : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
 
+    private ParticleSystem particleSystem;
+
+    [HideInInspector]
+    public DestroyEffect destroyEffect; 
+
     private bool isDestoy;
 
     private float timerToDestroySprite;
@@ -44,7 +49,12 @@ public class Cell : MonoBehaviour
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        particleSystem = GetComponent<ParticleSystem>();
+        GetComponent<ParticleSystemRenderer>().sortingOrder = 10;
+        destroyEffect = GetComponentInChildren<DestroyEffect>();
+        destroyEffect.cell = this;
     }
+        
 
     void OnMouseDown()
     {
@@ -313,19 +323,10 @@ public class Cell : MonoBehaviour
         {
             if (crystal.bonus == null)
             {
-                isCrystalMove = false;
-                Destroy(crystal.gameObject);
-                //if (cellInCombination.Count != 0)
-                //{
-                //    foreach (Cell cell in cellInCombination)
-                //    {
-                //        if (cell!=this)
-                //            cell.DestroyCrystal();
-                //    }
-                //}
-                cellInCombination.Clear();
-                crystal = null;
-                isCrystalIn = false;
+                isCrystalMove = true;
+                particleSystem.Play();
+                destroyEffect.Activate(crystal.gameObject, true);
+
             }
             else
             {
@@ -333,29 +334,25 @@ public class Cell : MonoBehaviour
                 {
                     if (!crystal.bonus.bounceStart)
                     {
-                        //crystal.DestroySprite();
                         crystal.bonus.Acivate();
                         cellInCombination.Clear();
+                        isCrystalMove = false;
+
                     }
                 }
                 else
                 {
-                    isCrystalMove = false;
-                    Destroy(crystal.gameObject);
-                    //if (cellInCombination.Count != 0)
-                    //{
-                    //    foreach (Cell cell in cellInCombination)
-                    //    {
-                    //        if (cell != this)
-                    //            cell.DestroyCrystal();
-                    //    }
-                    //}
-                    cellInCombination.Clear();
-                    crystal = null;
-                    isCrystalIn = false;
+                    isCrystalMove = true;
+                    destroyEffect.Activate(crystal.gameObject, true);
+                    particleSystem.Play();
                 }
             }
         }
-        isCrystalMove = false;
+        else
+        {
+            isCrystalMove = false;
+        }
     }
+
+    
 }

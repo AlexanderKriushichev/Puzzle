@@ -518,39 +518,6 @@ public class Field : MonoBehaviour
     }
 
     /// <summary>
-    /// Уничтожение кристалов
-    /// </summary>
-    //public void DestroyCrystal()
-    //{
-    //    if (!CheckMove())
-    //    {
-    //        return;
-    //    }
-
-    //    List<Cell> nearbyCells = new List<Cell>();
-    //    List<Cell> checkedCell = new List<Cell>();
-    //    for (int i = 0; i < 8; i++)
-    //    {
-    //        for (int j = 0; j < 8; j++)
-    //        {
-    //            if (!cells[i, j].isChecked)
-    //                nearbyCells.AddRange(GetAdjacentCells(i, j, ref checkedCell));
-    //        }
-    //    }
-
-    //    Debug.Log(nearbyCells.Count);
-    //    foreach (Cell destroyCell in nearbyCells)
-    //    {
-    //        Destroy(destroyCell.crystal.gameObject);
-    //        destroyCell.crystal = null;
-    //    }
-    //    ResetAllCells();
-    //    //ResetCrystalMove();
-    //    //MoveCrystals();
-
-    //}
-
-    /// <summary>
     /// Генерация массива с цифровыми кодами цветов ячеек
     /// </summary>
     private int GenerateColor(int x, int y)
@@ -718,6 +685,11 @@ public class Field : MonoBehaviour
         inRotate = false;
     }
 
+    /// <summary>
+    /// Поиск возможной комбинации
+    /// </summary>
+    /// <param name="cell">Клетка</param>
+    /// <returns>Цель движения</returns>
     public Cell FindPossibleCombination(Cell cell)
     {
         if (cell.crystal == null)
@@ -737,6 +709,10 @@ public class Field : MonoBehaviour
                         return cells[cell.x - 1, cell.y];
                     }
                     if (cell.crystal.bonus.GetType() == typeof(BoxBonus) && cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(BoxBonus))
+                    {
+                        return cells[cell.x - 1, cell.y];
+                    }
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
                     {
                         return cells[cell.x - 1, cell.y];
                     }
@@ -764,6 +740,10 @@ public class Field : MonoBehaviour
                     {
                         return cells[cell.x + 1, cell.y];
                     }
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
+                    {
+                        return cells[cell.x + 1, cell.y];
+                    }
                 }
             }
             if (CheckNearCombination(cell.x, cell.y, cells[cell.x + 1, cell.y]))
@@ -785,6 +765,10 @@ public class Field : MonoBehaviour
                         return cells[cell.x , cell.y-1];
                     }
                     if (cell.crystal.bonus.GetType() == typeof(BoxBonus) && cells[cell.x, cell.y - 1].crystal.bonus.GetType() == typeof(BoxBonus))
+                    {
+                        return cells[cell.x, cell.y - 1];
+                    }
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
                     {
                         return cells[cell.x, cell.y - 1];
                     }
@@ -812,6 +796,10 @@ public class Field : MonoBehaviour
                     {
                         return cells[cell.x, cell.y + 1];
                     }
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
+                    {
+                        return cells[cell.x, cell.y + 1];
+                    }
                 }
             }
             if (CheckNearCombination(cell.x, cell.y, cells[cell.x, cell.y + 1]))
@@ -821,6 +809,9 @@ public class Field : MonoBehaviour
         return null;
     }
 
+    /// <summary>
+    /// Поиск пути движения для кристалов
+    /// </summary>
     private void FindWayFromCrystals()
     {
         bool move = false;
@@ -856,6 +847,7 @@ public class Field : MonoBehaviour
                                     lineBonus.Line(combo.activeCell.crystal.typeOfLine, this, combo.activeCell.crystal);
                                     lineBonus.SetEffect(combo.activeCell.crystal.InitLineEffect(), combo.activeCell.crystal.lineSprite);
                                     combo.activeCell.crystal.bonus = lineBonus;
+                                    combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
                                     foreach (Cell cell in combo.cellsInCombination)
                                     {
                                         if (cell != combo.activeCell)
@@ -900,6 +892,7 @@ public class Field : MonoBehaviour
                                         combo.activeCell.crystal.bonus = lineBonus;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder += 2;
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.spriteOfBoxEffect[combo.activeCell.crystal.colorID];
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)
@@ -927,6 +920,7 @@ public class Field : MonoBehaviour
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.starSprite;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder = 1;
                                         combo.activeCell.crystal.type = TypeOfCrystal.star;
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)
@@ -1054,6 +1048,14 @@ public class Field : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Добавление пути движения
+    /// </summary>
+    /// <param name="i"></param>
+    /// <param name="j"></param>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
     private bool AddWayPoint(int i, int j, int x, int y)
     {
         Crystal crystal = cells[i, j].crystal;

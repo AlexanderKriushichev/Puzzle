@@ -11,6 +11,8 @@ public class BoxBonus : Bonus
 
     private bool firstActive = false;
     private int areaSize = 1;
+
+    private float timer = 0.5f;
     public int AreaSize
     {
         get { return areaSize; }
@@ -78,9 +80,9 @@ public class BoxBonus : Bonus
                 }
             }
         }
+        timer = 0.5f;
         area.transform.localScale = new Vector3(1.5f, 1.5f, 1);
         startEffect = true;
-        bounceStart = false;
         scaleComplite = true;
         field.Update();
     }
@@ -103,12 +105,22 @@ public class BoxBonus : Bonus
         
         if (firstActive )
         {
-            field.Update();
-            if (field.CheckMove() && !field.inRotate && field.moveCrystals.Count == 0 && field.combinations.Count == 0)
+            if (timer > 0)
             {
-                firstActive = false;
-                Acivate();
-                bounceComplite = true;
+                timer -= Time.deltaTime;
+            }
+            else
+            {
+                bounceStart = false;
+                field.Update();
+                field.Update();
+
+                if (field.CheckMove() && !field.inRotate && field.moveCrystals.Count == 0 && field.combinations.Count == 0)
+                {
+                    firstActive = false;
+                    Acivate();
+                    bounceComplite = true;
+                }
             }
         }
     }
