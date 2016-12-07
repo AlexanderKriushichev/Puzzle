@@ -40,26 +40,31 @@ public class Field : MonoBehaviour
         foreach (Cell cell in gameObject.GetComponentsInChildren<Cell>())
         {
             cells[cell.x, cell.y] = cell;
-            if (!cells[cell.x, cell.y].isBarrier)
-            {
-                GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
-                initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
-                cells[cell.x, cell.y].crystal = initCell.GetComponent<Crystal>();
-                cells[cell.x, cell.y].crystal.previousCell = cells[cell.x, cell.y];
-                cells[cell.x, cell.y].crystal.cell = cells[cell.x, cell.y];
-                cells[cell.x, cell.y].isCrystalIn = true;
-                cells[cell.x, cell.y].crystal.transform.position = cells[cell.x, cell.y].transform.position + new Vector3(0, 1, 0);
-                cells[cell.x, cell.y].crystal.transform.DOMove(cells[cell.x, cell.y].transform.position, 0.15f).SetEase(cells[cell.x, cell.y].crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
-                cells[cell.x, cell.y].isCrystalMove = true;
-                cells[cell.x, cell.y].gameField = this;
-            }
-            else
-            {
-                cells[cell.x, cell.y].gameField = this;
-            }
         }
 
-
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                if (!cells[i,j].isBarrier)
+                {
+                    GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[i, j].transform);
+                    initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(i, j));
+                    cells[i, j].crystal = initCell.GetComponent<Crystal>();
+                    cells[i, j].crystal.previousCell = cells[i, j];
+                    cells[i, j].crystal.cell = cells[i, j];
+                    cells[i, j].isCrystalIn = true;
+                    cells[i, j].crystal.transform.position = cells[i, j].transform.position + new Vector3(0, 1, 0);
+                    cells[i, j].crystal.transform.DOMove(cells[i, j].transform.position, 0.15f).SetEase(cells[i, j].crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
+                    cells[i, j].isCrystalMove = true;
+                    cells[i, j].gameField = this;
+                }
+                else
+                {
+                    cells[i, j].gameField = this;
+                }
+            }
+        }
 
     }
 
@@ -128,8 +133,12 @@ public class Field : MonoBehaviour
         foreach (Cell cell in cells)
         {
             if (cell.isCrystalMove || cell.listCrystalMove.Count != 0)
+            {
+                isCrystalMove = false;
                 return false;
+            }
         }
+        isCrystalMove = true;
         return true;
     }
 
@@ -740,7 +749,7 @@ public class Field : MonoBehaviour
                     {
                         return cells[cell.x + 1, cell.y];
                     }
-                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x + 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
                     {
                         return cells[cell.x + 1, cell.y];
                     }
@@ -768,7 +777,7 @@ public class Field : MonoBehaviour
                     {
                         return cells[cell.x, cell.y - 1];
                     }
-                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x, cell.y - 1].crystal.bonus.GetType() == typeof(StarBonus))
                     {
                         return cells[cell.x, cell.y - 1];
                     }
@@ -796,7 +805,7 @@ public class Field : MonoBehaviour
                     {
                         return cells[cell.x, cell.y + 1];
                     }
-                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x - 1, cell.y].crystal.bonus.GetType() == typeof(StarBonus))
+                    if (cell.crystal.bonus.GetType() == typeof(StarBonus) || cells[cell.x, cell.y + 1].crystal.bonus.GetType() == typeof(StarBonus))
                     {
                         return cells[cell.x, cell.y + 1];
                     }
@@ -847,7 +856,7 @@ public class Field : MonoBehaviour
                                     lineBonus.Line(combo.activeCell.crystal.typeOfLine, this, combo.activeCell.crystal);
                                     lineBonus.SetEffect(combo.activeCell.crystal.InitLineEffect(), combo.activeCell.crystal.lineSprite);
                                     combo.activeCell.crystal.bonus = lineBonus;
-                                    combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
+                                    combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
                                     foreach (Cell cell in combo.cellsInCombination)
                                     {
                                         if (cell != combo.activeCell)
@@ -892,7 +901,7 @@ public class Field : MonoBehaviour
                                         combo.activeCell.crystal.bonus = lineBonus;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder += 2;
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.spriteOfBoxEffect[combo.activeCell.crystal.colorID];
-                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)
@@ -916,11 +925,12 @@ public class Field : MonoBehaviour
                                         StarBonus starBonus = combo.activeCell.crystal.gameObject.AddComponent<StarBonus>();
                                         combo.activeCell.crystal.bonus = starBonus;
                                         starBonus.Star(this, combo.activeCell.crystal);
+                                        starBonus.SetType(combo.activeCell.crystal.type);
                                         starBonus.SetEffect(combo.activeCell.crystal.lizerPrefab, combo.activeCell.crystal.InitStarArialEffect(), combo.activeCell.crystal.InitStarArialEffect(), combo.activeCell.crystal.firstColorArial, combo.activeCell.crystal.secondColorArial);
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.starSprite;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder = 1;
                                         combo.activeCell.crystal.type = TypeOfCrystal.star;
-                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false);
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)
@@ -956,6 +966,9 @@ public class Field : MonoBehaviour
                 {
                     if (cells[i, j].crystal != null)
                     {
+                        if (cells[i, j].isCrystalMove)
+                            return;
+
                         if (j < size - 1)
                         {
                             if (cells[i, j + 1].crystal == null && !cells[i, j + 1].isBarrier )
@@ -1043,7 +1056,8 @@ public class Field : MonoBehaviour
                     moveCrystals.RemoveAt(i);
                     break;
                 }
-                moveCrystals[i].MoveOnWay();                
+                moveCrystals[i].MoveOnWay();
+
             }
         }
     }
@@ -1096,6 +1110,11 @@ public class Field : MonoBehaviour
     {
 
         FindWayFromCrystals();
+
+        foreach (Cell cell in cells)
+        {
+            cell.destroyEffect.UpdateDestroy();
+        }
 
         if (findComplite && CheckMove() && combinations.Count == 0)
         {

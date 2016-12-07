@@ -57,7 +57,7 @@ public class StarBonus : Bonus {
                 cellsToDestroy.Add(cell);
                 GameObject initLine = (GameObject)Instantiate(line, transform.position, transform.rotation);
                 initLine.GetComponent<TrailRenderer>().sortingOrder = 1;
-                initLine.transform.DOMove(cell.transform.position, 0.5f).OnComplete(DestroyCells);
+                initLine.transform.DOMove(cell.transform.position, 0.5f).OnComplete(delegate { DestroyCells(); Destroy(initLine); });
             }
         }
     }

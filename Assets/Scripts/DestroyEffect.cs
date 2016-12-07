@@ -2,43 +2,52 @@
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-public class DestroyEffect : MonoBehaviour {
+public class DestroyEffect : MonoBehaviour
+{
 
     public List<ElementDestroyEffect> destroysSprite = new List<ElementDestroyEffect>();
+    public TextMesh text;
     private float timer = 0.5f;
     private bool active = false;
+    private bool complite = false;
     private GameObject crystal;
     public Cell cell;
     private bool isDestroy = true;
-    public void Activate(GameObject _object, bool _isDestroy)
+    private int score;
+    public void Activate(GameObject _object, bool _isDestroy, int countScore)
     {
         if (!active)
         {
             crystal = _object;
             isDestroy = _isDestroy;
-            foreach (ElementDestroyEffect destObject in destroysSprite)
+            score = countScore;
+            for (int i = 0; i < destroysSprite.Count;i++ )
             {
-                destObject.sprite.transform.DOLocalMove(destObject.position, 0.5f).SetEase(Ease.Flash);
-                destObject.sprite.transform.DOScale(destObject.scale, 0.5f).SetEase(Ease.Flash);
-                destObject.sprite.DOColor(destObject.endColor, 0.5f).SetEase(Ease.Flash);
-                destObject.sprite.transform.DOLocalRotate(destObject.endRotation, 0.5f).SetEase(Ease.Flash);
+                destroysSprite[i].sprite.transform.DOLocalMove(destroysSprite[i].position, 0.5f).SetEase(Ease.Flash);
+                destroysSprite[i].sprite.transform.DOScale(destroysSprite[i].scale, 0.5f).SetEase(Ease.Flash);
+                destroysSprite[i].sprite.DOColor(destroysSprite[i].endColor, 0.5f).SetEase(Ease.Flash);
+                destroysSprite[i].sprite.transform.DOLocalRotate(destroysSprite[i].endRotation, 0.5f).SetEase(Ease.Flash).OnComplete(destroysSprite[i].Complite);
             }
             active = true;
         }
     }
 
-    void Update()
+    public void UpdateDestroy()
     {
         if (active)
         {
-            if (timer > 0)
+            bool objComplite = true;
+            foreach (ElementDestroyEffect obj in destroysSprite)
             {
-                timer -= Time.deltaTime;
+                if (!obj.complite)
+                    objComplite = false;
             }
-            else
+            if (objComplite)
             {
-                active = false;
-                timer = 0.5f;
+                foreach (ElementDestroyEffect obj in destroysSprite)
+                {
+                    obj.complite = false;
+                }
                 foreach (ElementDestroyEffect destObject in destroysSprite)
                 {
                     destObject.sprite.transform.DOLocalMove(Vector3.zero, 0.25f).SetEase(Ease.InFlash);
@@ -53,14 +62,24 @@ public class DestroyEffect : MonoBehaviour {
                     cell.cellInCombination.Clear();
                     cell.crystal = null;
                     cell.isCrystalIn = false;
+                    if (score != 0)
+                    {
+                        text.text = "+" + score;
+                        ScoreManager.AddScore(score);
+                        DOTween.Kill(text);
+                        text.transform.localScale = Vector3.one;
+                        text.transform.DOLocalMove(new Vector3(0, 0.5f, 1), 1).OnComplete(delegate { text.transform.localScale = Vector3.zero; text.transform.localPosition = Vector3.zero; });
+                    }
                 }
+                active = false;
+                cell.gameField.Update();
             }
         }
     }
 }
 
 [System.Serializable]
-public struct ElementDestroyEffect
+public class ElementDestroyEffect
 {
     public SpriteRenderer sprite;
     public Vector3 position;
@@ -69,4 +88,10 @@ public struct ElementDestroyEffect
     public Vector3 endRotation;
     public Color startColor;
     public Color endColor;
+    public bool complite;
+
+    public void Complite()
+    {
+        complite = true;
+    }
 }

@@ -76,6 +76,10 @@ public class Cell : MonoBehaviour
                 return;
         }
 
+        if (ScoreManager.countMove <= 0)
+            return;
+
+        ScoreManager.MakeMove();
 
         Vector2 endPositionOfMouse = Input.mousePosition;
         Vector2 moveVector = endPositionOfMouse - startPositionOfMouse;
@@ -155,7 +159,7 @@ public class Cell : MonoBehaviour
                     destroyCellList.Add(this);
 
                     crystal.spriteRenderer.sortingOrder = 0;
-                    target.spriteRenderer.sortingOrder = 0;
+                    target.crystal.spriteRenderer.sortingOrder = 0;
 
                     destroyCellList.Add(target);
                     if (target.x == x)
@@ -211,7 +215,7 @@ public class Cell : MonoBehaviour
                         delegate
                         {
                             crystal.spriteRenderer.sortingOrder = 0;
-                            target.spriteRenderer.sortingOrder = 0;
+                            target.crystal.spriteRenderer.sortingOrder = 0;
 
                             foreach (Cell cellDestroy in destroyCellList)
                             {
@@ -325,7 +329,7 @@ public class Cell : MonoBehaviour
             {
                 isCrystalMove = true;
                 particleSystem.Play();
-                destroyEffect.Activate(crystal.gameObject, true);
+                destroyEffect.Activate(crystal.gameObject, true,100);
 
             }
             else
@@ -343,7 +347,7 @@ public class Cell : MonoBehaviour
                 else
                 {
                     isCrystalMove = true;
-                    destroyEffect.Activate(crystal.gameObject, true);
+                    destroyEffect.Activate(crystal.gameObject, true,100);
                     particleSystem.Play();
                 }
             }
