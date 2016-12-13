@@ -16,6 +16,9 @@ public class Cell : MonoBehaviour
 
     public bool isBarrier;
     [Space(10)]
+
+    public bool targetOfDeathStar;
+
     public Crystal crystal;
 
     public Field gameField;
@@ -323,7 +326,7 @@ public class Cell : MonoBehaviour
     /// </summary>
     public void DestroyCrystal()
     {
-        if (crystal != null)
+        if (crystal != null && crystal.type!= TypeOfCrystal.starOfDeath)
         {
             if (crystal.bonus == null)
             {

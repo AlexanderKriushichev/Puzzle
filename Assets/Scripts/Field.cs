@@ -46,7 +46,7 @@ public class Field : MonoBehaviour
         {
             for (int j = 0; j < size; j++)
             {
-                if (!cells[i,j].isBarrier)
+                if (!cells[i, j].isBarrier && cells[i, j].crystal==null)
                 {
                     GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[i, j].transform);
                     initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(i, j));
@@ -639,6 +639,10 @@ public class Field : MonoBehaviour
         if (inRotate)
             return;
         inRotate = true;
+        foreach(Cell cell in cells)
+        {
+            cell.destroyEffect.transform.localEulerAngles += new Vector3(0, 0, -90);
+        }
         transform.DOLocalRotate(transform.localEulerAngles + new Vector3(0, 0, -90), 0.5f).OnComplete(ReassignCellsPositionsRight);
     }
 
@@ -670,6 +674,10 @@ public class Field : MonoBehaviour
         if (inRotate)
             return;
         inRotate = true;
+        foreach (Cell cell in cells)
+        {
+            cell.destroyEffect.transform.localEulerAngles += new Vector3(0, 0, 90);
+        }
         transform.DOLocalRotate(transform.localEulerAngles + new Vector3(0, 0, 90), 0.5f).OnComplete(ReassignCellsPositionsLeft);
     }
 
@@ -856,7 +864,7 @@ public class Field : MonoBehaviour
                                     lineBonus.Line(combo.activeCell.crystal.typeOfLine, this, combo.activeCell.crystal);
                                     lineBonus.SetEffect(combo.activeCell.crystal.InitLineEffect(), combo.activeCell.crystal.lineSprite);
                                     combo.activeCell.crystal.bonus = lineBonus;
-                                    combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
+                                    combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,250);
                                     foreach (Cell cell in combo.cellsInCombination)
                                     {
                                         if (cell != combo.activeCell)
@@ -901,7 +909,7 @@ public class Field : MonoBehaviour
                                         combo.activeCell.crystal.bonus = lineBonus;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder += 2;
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.spriteOfBoxEffect[combo.activeCell.crystal.colorID];
-                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,500);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)
@@ -930,7 +938,7 @@ public class Field : MonoBehaviour
                                         combo.activeCell.crystal.spriteRenderer.sprite = combo.activeCell.crystal.starSprite;
                                         combo.activeCell.crystal.spriteRenderer.sortingOrder = 1;
                                         combo.activeCell.crystal.type = TypeOfCrystal.star;
-                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,0);
+                                        combo.activeCell.destroyEffect.Activate(combo.activeCell.gameObject, false,1000);
                                         foreach (Cell cell in combo.cellsInCombination)
                                         {
                                             if (cell != combo.activeCell)

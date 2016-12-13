@@ -8,6 +8,9 @@ public class ScoreManager : MonoBehaviour {
 
     public static int score;
 
+    public string levelName;
+    public int levelID;
+
     public Text textScore;
 
     public Text textTarget;
@@ -19,7 +22,27 @@ public class ScoreManager : MonoBehaviour {
     public RectTransform endPanel;
     public Text endPanelText;
 
+    public RectTransform menu;
+
     public float targetScore;
+
+    public  int m_targetDeathStar;
+
+    private static int _targetDeathStar;
+    public static int targetDeathStar
+    {
+        get
+        {
+            return _targetDeathStar;
+        }
+        set 
+        {
+            if (value >= 0)
+                _targetDeathStar = value;
+            else
+                _targetDeathStar = 0;
+        }
+    }
 
     [SerializeField]
     private Field field;
@@ -29,6 +52,8 @@ public class ScoreManager : MonoBehaviour {
 
     public static int countMove;
 
+    public SpaceMan spaceMan;
+
     static List<int> listScore = new List<int>();
 
     float timer = 0.1f;
@@ -37,6 +62,7 @@ public class ScoreManager : MonoBehaviour {
 
     void Start()
     {
+        targetDeathStar = m_targetDeathStar;
         countMove = _countMove;
         score = 0;
         textTarget.text = "Цель: " + targetScore.ToString();
@@ -51,6 +77,12 @@ public class ScoreManager : MonoBehaviour {
     static public void MakeMove()
     {
         countMove--;
+    }
+
+    static public void AddDeathStar()
+    {
+        Debug.Log(targetDeathStar);
+        targetDeathStar--;
     }
 
     void Update()
@@ -71,6 +103,7 @@ public class ScoreManager : MonoBehaviour {
         }
         textScore.text = "Счёт: " + score;
         textCountMove.text = "Ходы: " + countMove.ToString();
+
         if (countMove == 0 && !endShowPanel && field.CheckMove() && !field.inRotate && field.moveCrystals.Count == 0 && field.combinations.Count == 0)
         {
             endShowPanel = true;
@@ -80,7 +113,19 @@ public class ScoreManager : MonoBehaviour {
 
     void ShowEndPanel()
     {
-        endPanel.DOScale(Vector3.one, 1).SetEase(Ease.Flash);
+        endPanel.DOScale(Vector3.one, 1).SetEase(Ease.Flash).OnComplete(delegate { endPanel.DOScale(Vector3.zero, 0.5f).OnComplete(()=>menu.gameObject.SetActive(true));  });
+
+        if (score >= targetScore&& targetDeathStar == 0)
+        {
+            endPanelText.text = "Молодец!";
+            spaceMan.SetSuccessedText();
+        }
+        else
+        {
+            endPanelText.text = "Провал!";
+            spaceMan.SetUnsuccessedText();
+
+        }
     }
 
 }

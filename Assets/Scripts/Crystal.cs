@@ -264,9 +264,25 @@ public class Crystal : MonoBehaviour {
         //    bonus.Acivate();
         //}
     }
+
+    void Update()
+    {
+        if (!cell.gameField.CheckMove())
+            return;
+        if (cell.gameField.inRotate)
+            return;
+        if (cell.gameField.moveCrystals.Count != 0)
+            return;
+        if (type == TypeOfCrystal.starOfDeath && cell.targetOfDeathStar)
+        {
+            type = TypeOfCrystal.None;
+            ScoreManager.AddDeathStar();
+            cell.destroyEffect.Activate(gameObject, true, 1000);
+        }
+    }
 }
 
 /// <summary>
 /// Тип цвета кристалла
 /// </summary>
-public enum TypeOfCrystal { triangle, sphere, rhomb, rectangle, pentagon, hexagon, star }
+public enum TypeOfCrystal { triangle, sphere, rhomb, rectangle, pentagon, hexagon, star, starOfDeath, None }
