@@ -12,6 +12,9 @@ public class ElementLevelRotate : MonoBehaviour {
     public Transform bigElement1;
     public Transform bigElement2;
 
+    public Color activeColor;
+    public Color disactiveColor;
+
     void Start()
     {
         SetRandomRotation(littleElement1, littleElement2);
@@ -38,6 +41,28 @@ public class ElementLevelRotate : MonoBehaviour {
         Vector3 rotation = element.localEulerAngles;
         float z = rotation.z;
         DOTween.To(() => rotation, x => element.localEulerAngles = x, new Vector3(0, 0, z + dir*360), speed).SetEase(Ease.Linear).OnComplete(() => Rotate(element,dir, speed));
+    }
+
+    public void SetActive(bool active)
+    {
+        if (active)
+        {
+            littleElement1.GetComponent<SpriteRenderer>().color = activeColor;
+            littleElement2.GetComponent<SpriteRenderer>().color = activeColor;
+            midElement1.GetComponent<SpriteRenderer>().color = activeColor;
+            midElement2.GetComponent<SpriteRenderer>().color = activeColor;
+            bigElement1.GetComponent<SpriteRenderer>().color = activeColor;
+            bigElement2.GetComponent<SpriteRenderer>().color = activeColor;
+        }
+        else
+        {
+            littleElement1.GetComponent<SpriteRenderer>().color = disactiveColor;
+            littleElement2.GetComponent<SpriteRenderer>().color = disactiveColor;
+            midElement1.GetComponent<SpriteRenderer>().color = disactiveColor;
+            midElement2.GetComponent<SpriteRenderer>().color = disactiveColor;
+            bigElement1.GetComponent<SpriteRenderer>().color = disactiveColor;
+            bigElement2.GetComponent<SpriteRenderer>().color = disactiveColor;
+        }
     }
 
 }

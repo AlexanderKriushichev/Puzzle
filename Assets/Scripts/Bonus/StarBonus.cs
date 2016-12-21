@@ -28,6 +28,7 @@ public class StarBonus : Bonus {
     {
         field = _field;
         crystal = _crystal;
+        typeOfCrystal = crystal.type;
     }
 
     public void SetType(TypeOfCrystal type)
@@ -52,12 +53,15 @@ public class StarBonus : Bonus {
         spriteRenderer.sortingOrder = 2;
         foreach (Cell cell in field.cells)
         {
-            if (cell.crystal.type == typeOfCrystal)
+            if (cell.crystal != null)
             {
-                cellsToDestroy.Add(cell);
-                GameObject initLine = (GameObject)Instantiate(line, transform.position, transform.rotation);
-                initLine.GetComponent<TrailRenderer>().sortingOrder = 1;
-                initLine.transform.DOMove(cell.transform.position, 0.5f).OnComplete(delegate { DestroyCells(); Destroy(initLine); });
+                if (cell.crystal.type == typeOfCrystal)
+                {
+                    cellsToDestroy.Add(cell);
+                    GameObject initLine = (GameObject)Instantiate(line, transform.position, transform.rotation);
+                    initLine.GetComponent<TrailRenderer>().sortingOrder = 1;
+                    initLine.transform.DOMove(cell.transform.position, 0.5f).OnComplete(delegate { DestroyCells(); Destroy(initLine); });
+                }
             }
         }
     }

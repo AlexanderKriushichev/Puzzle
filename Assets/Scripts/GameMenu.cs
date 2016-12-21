@@ -6,7 +6,7 @@ public class GameMenu : MonoBehaviour {
     public List<GameObject> disactiveObjects= new List<GameObject>();
     public GameObject gameMenu;
     public ScoreManager scoreManager;
-
+    public string levelName;
     public void Pause()
     {
         gameMenu.SetActive(true);
@@ -33,6 +33,11 @@ public class GameMenu : MonoBehaviour {
     public void Exit()
     {
         Time.timeScale = 1;
+
+        if (LevelLoad.levelsScore.ContainsKey(levelName))
+            LevelLoad.levelsScore[levelName] = ScoreManager.score;
+        else
+            LevelLoad.levelsScore.Add(levelName, ScoreManager.score);
 
         SceneManager.LoadScene("Menu");
     }

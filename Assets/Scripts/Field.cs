@@ -68,24 +68,24 @@ public class Field : MonoBehaviour
 
     }
 
-    void GenerateField()
-    {
-        foreach (Cell cell in cells)
-        {
-            if (!cell.isBarrier && cell.crystal==null)
-            {
-                GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
-                initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
-                cell.crystal = initCell.GetComponent<Crystal>();
-                cell.crystal.previousCell = cell;
-                cell.crystal.cell = cell;
-                cell.isCrystalIn = true;
-                cell.crystal.transform.position = cell.transform.position + new Vector3(0, 1, 0);
-                cell.crystal.transform.DOMove(cell.transform.position, 0.15f).SetEase(cell.crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
-                cell.isCrystalMove = true;
-            }
-        }
-    }
+    //void GenerateField()
+    //{
+    //    foreach (Cell cell in cells)
+    //    {
+    //        if (!cell.isBarrier && cell.crystal==null)
+    //        {
+    //            GameObject initCell = (GameObject)Instantiate(crystalPrefab, cells[cell.x, cell.y].transform);
+    //            initCell.GetComponent<Crystal>().SetRandomType(GenerateColor(cell.x, cell.y));
+    //            cell.crystal = initCell.GetComponent<Crystal>();
+    //            cell.crystal.previousCell = cell;
+    //            cell.crystal.cell = cell;
+    //            cell.isCrystalIn = true;
+    //            cell.crystal.transform.position = cell.transform.position + new Vector3(0, 1, 0);
+    //            cell.crystal.transform.DOMove(cell.transform.position, 0.15f).SetEase(cell.crystal.curve).OnComplete(delegate { ResetCrystalMove(); });
+    //            cell.isCrystalMove = true;
+    //        }
+    //    }
+    //}
 
     void DeleteField()
     {
@@ -659,6 +659,23 @@ public class Field : MonoBehaviour
             cell.x = x;
             cell.y = y;
             newList[x, y] = cell;
+            if (cell.crystal != null)
+            {
+                if (cell.crystal.bonus != null)
+                {
+                    if (cell.crystal.bonus is LineBonus)
+                    {
+                        if ((cell.crystal.bonus as LineBonus).type == TypeLineBonus.Horizontal)
+                        {
+                            (cell.crystal.bonus as LineBonus).type = TypeLineBonus.Verical;
+                        }
+                        else
+                        {
+                            (cell.crystal.bonus as LineBonus).type = TypeLineBonus.Horizontal;
+                        }
+                    }
+                }
+            }
             if (y == 0)
                 cell.isCellGenerate = true;
         }
@@ -1140,7 +1157,7 @@ public class Field : MonoBehaviour
             {
                 Debug.Log("Нет ходов");
                 DeleteField();
-                GenerateField();
+                //GenerateField();
             }
         }
     }
