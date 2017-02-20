@@ -34,10 +34,16 @@ public class Planet : MonoBehaviour {
 
     public void MoveToSlot(Slot slotToMove)
     {
-        slot.planet = null;
+        if (slot != null)
+            slot.planet = null;
         slot = null;
         slotToMove.planet = this;
         transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(() => OnCompliteMove(slotToMove));
+    }
+
+    public void ExchangePlanet(Slot slotToMove)
+    {
+        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(() => transform.DOMove(slot.transform.position, speedMove).SetEase(Ease.Linear));
     }
 
     public void MoveToSlot(Slot slotToMove, bool lastSlot)
@@ -60,6 +66,7 @@ public class Planet : MonoBehaviour {
         transform.SetParent(slotToMove.transform);
         slotToMove.planet = this;
         slot = slotToMove;
+        slot.slotController.CheckFieldForCombination();
     }
 
 }
