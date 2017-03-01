@@ -38,12 +38,33 @@ public class Planet : MonoBehaviour {
             slot.planet = null;
         slot = null;
         slotToMove.planet = this;
-        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(() => OnCompliteMove(slotToMove));
+        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnUpdate(
+            delegate
+            {
+                if (slot!=null)
+                {
+                    slot.slotController.CanPlanetMove = false;
+                }
+            }).OnComplete(() => OnCompliteMove(slotToMove));
     }
 
     public void ExchangePlanet(Slot slotToMove)
     {
-        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(() => transform.DOMove(slot.transform.position, speedMove).SetEase(Ease.Linear));
+        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnUpdate(
+            delegate
+            {
+                if (slot != null)
+                {
+                    slot.slotController.CanPlanetMove = false;
+                }
+            }).OnComplete(() => transform.DOMove(slot.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(
+                delegate
+                {
+                    if (slot != null)
+                    {
+                        slot.slotController.CanPlanetMove = true;
+                    }
+                }));
     }
 
     public void MoveToSlot(Slot slotToMove, bool lastSlot)

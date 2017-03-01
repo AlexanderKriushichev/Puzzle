@@ -40,7 +40,7 @@ public class SlotController : MonoBehaviour
     [HideInInspector]
     public Slot firstSelectSlotToExchange;
 
-    private bool _canPlanetMove = true;
+    public bool _canPlanetMove = true;
     public bool CanPlanetMove
     {
         get
@@ -412,9 +412,10 @@ public class SlotController : MonoBehaviour
         {
             Planet firstPlanet = firstSlot.planet;
             Planet secondPlanet = secondSlot.planet;
+            //CanPlanetMove = false;
+
             if (CheckPossibleCombination(secondSlot, firstPlanet) || CheckPossibleCombination(firstSlot, secondPlanet))
             {
-                CanPlanetMove = false;
                 firstPlanet.MoveToSlot(secondSlot);
                 secondPlanet.MoveToSlot(firstSlot);
             }
@@ -535,7 +536,6 @@ public class SlotController : MonoBehaviour
         {
             combinationFound = true;
             FindCombination();
-            CanPlanetMove = true;
         }
     }
 
@@ -576,6 +576,10 @@ public class SlotController : MonoBehaviour
         DestroyCombination();
 
         CheckFieldForMove();
+
+        CanPlanetMove = true;
+
+        MovePlanets();
 
         for (int i = 0; i < sizeField; i++)
         {
@@ -673,7 +677,7 @@ public class SlotController : MonoBehaviour
 
     bool MovePlanets()
     {
-        for (int j = sizeField-1; j >=0; j--)
+        for (int j = sizeField - 1; j >= 0; j--)
         {
             for (int i = 0; i < sizeField; i++)
             {
@@ -684,9 +688,9 @@ public class SlotController : MonoBehaviour
                     CanPlanetMove = false;
                     if (j - slotPlanetsList[i, j][0].y == 1)
                     {
-                        if (i == slotPlanetsList[i, j][0].x || slotPlanetsList[slotPlanetsList[i, j][0].x, j].Count == 0)
+                        if (i == slotPlanetsList[i, j][0].x || slotPlanetsList[slotPlanetsList[i, j][0].x, j].Count == 0 || (slotPlanetsList[slotPlanetsList[i, j][0].x, j].Count != 0 ? (slotPlanetsList[slotPlanetsList[i, j][0].x, j][0] != slotPlanetsList[i, j][0]) : true))
                         {
-                            if (slotPlanetsList[i, j][0].y != -1)
+                            if (slots[i,j].typeOfSlot != TypeOfSlot.Generator)
                             {
                                 if (slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet != null && slots[i, j].planet == null)
                                 {
@@ -799,128 +803,6 @@ public class SlotController : MonoBehaviour
                                         selectPlanet.MoveToSlot(slots[i, j]);
                                         slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                         return moveComplite;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (slotPlanetsList[slotPlanetsList[i, j][0].x, j][0] != slotPlanetsList[i, j][0])
-                            {
-                                if (slotPlanetsList[i, j][0].y != -1)
-                                {
-                                    if (slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet != null && slots[i, j].planet == null)
-                                    {
-                                        if (slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet.slot != null)
-                                        {
-                                            Planet selectPlanet = slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet;
-
-                                            if (j + 1 < sizeField)
-                                            {
-                                                if (slotPlanetsList[i, j + 1].Count != 0)
-                                                {
-                                                    if (slotPlanetsList[i, j + 1].Exists(x => x.x == i && x.y == j))
-                                                    {
-                                                        selectPlanet.MoveToSlot(slots[i, j]);
-                                                        slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                        return moveComplite;
-                                                    }
-                                                }
-
-                                                if (i - 1 >= 0)
-                                                {
-                                                    if (slotPlanetsList[i - 1, j + 1].Count != 0)
-                                                    {
-                                                        if (slotPlanetsList[i - 1, j + 1].Exists(x => x.x == i && x.y == j))
-                                                        {
-                                                            selectPlanet.MoveToSlot(slots[i, j]);
-                                                            slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                            return moveComplite;
-                                                        }
-                                                    }
-                                                }
-
-                                                if (i + 1 < sizeField)
-                                                {
-                                                    if (slotPlanetsList[i + 1, j + 1].Count != 0)
-                                                    {
-                                                        if (slotPlanetsList[i + 1, j + 1].Exists(x => x.x == i && x.y == j))
-                                                        {
-                                                            selectPlanet.MoveToSlot(slots[i, j]);
-                                                            slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                            return moveComplite;
-                                                        }
-                                                    }
-                                                }
-
-                                                selectPlanet.MoveToSlot(slots[i, j], true);
-                                                slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                return moveComplite;
-                                            }
-                                            else
-                                            {
-                                                selectPlanet.MoveToSlot(slots[i, j]);
-                                                slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                return moveComplite;
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    if (slots[i, j].planet == null)
-                                    {
-                                        int count = Random.Range(0, planetGenerateList.Count);
-                                        Planet selectPlanet = GeneratePlanet(planetGenerateList[count], slots[i, j]);
-                                        selectPlanet.transform.position += new Vector3(0, 1, 0);
-                                        if (j + 1 < sizeField)
-                                        {
-                                            if (slotPlanetsList[i, j].Count != 0)
-                                            {
-                                                if (slotPlanetsList[i, j].Exists(x => x.x == i && x.y == j - 1))
-                                                {
-                                                    selectPlanet.MoveToSlot(slots[i, j]);
-                                                    slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                    return moveComplite;
-                                                }
-                                            }
-
-                                            if (i - 1 >= 0)
-                                            {
-                                                if (slotPlanetsList[i - 1, j + 1].Count != 0)
-                                                {
-                                                    if (slotPlanetsList[i - 1, j + 1].Exists(x => x.x == i && x.y == j))
-                                                    {
-                                                        selectPlanet.MoveToSlot(slots[i, j]);
-                                                        slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                        return moveComplite;
-                                                    }
-                                                }
-                                            }
-
-                                            if (i + 1 < sizeField)
-                                            {
-                                                if (slotPlanetsList[i + 1, j + 1].Count != 0)
-                                                {
-                                                    if (slotPlanetsList[i + 1, j + 1].Exists(x => x.x == i && x.y == j))
-                                                    {
-                                                        selectPlanet.MoveToSlot(slots[i, j]);
-                                                        slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                                        return moveComplite;
-                                                    }
-                                                }
-                                            }
-
-                                            selectPlanet.MoveToSlot(slots[i, j], true);
-                                            slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                            return moveComplite;
-                                        }
-                                        else
-                                        {
-                                            selectPlanet.MoveToSlot(slots[i, j]);
-                                            slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
-                                            return moveComplite;
-                                        }
                                     }
                                 }
                             }
