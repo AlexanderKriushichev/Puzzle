@@ -15,6 +15,8 @@ public class Slot : MonoBehaviour
     [HideInInspector]
     public SlotController slotController;
 
+    public PlanetDestroyEffect destroyEffect;
+
     private Vector2 startPositionOfMouse;
     private Vector2 endPositionOfMouse;
     private Vector2 moveVector;
@@ -80,6 +82,26 @@ public class Slot : MonoBehaviour
                     }
                 }
             }
+        }
+    }
+
+
+    [ContextMenu("Destroy")]
+    public void DestroyPlanetInSlot()
+    {
+        destroyEffect.Activate();
+
+        StartCoroutine(DestroyPlanet());
+    }
+
+    IEnumerator DestroyPlanet()
+    {
+        yield return new WaitForSeconds(0.5f);
+        if (planet != null)
+        {
+            Destroy(planet.gameObject);
+            planet = null;
+            slotController.CheckFieldForMove();
         }
     }
 

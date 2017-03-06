@@ -36,6 +36,8 @@ public class SlotController : MonoBehaviour
     private bool[,] planetsAddInCombination = new bool[sizeField, sizeField];
 
     private int[,] planetsMoveCounter = new int[sizeField, sizeField];
+    private int moveCounter = 0;
+
 
     [HideInInspector]
     public Slot firstSelectSlotToExchange;
@@ -57,7 +59,15 @@ public class SlotController : MonoBehaviour
 
     private bool combinationFound = true;
 
-    private bool moveComplite = true;
+    public bool moveComplite = true;
+
+    #region VariablesMovePlanets
+
+    bool planetDontMoveMovePlanets = true;
+    Planet selectPlanetMovePlanets;
+    int countMovePlanets;
+
+    #endregion
 
 
     // Use this for initialization
@@ -410,13 +420,16 @@ public class SlotController : MonoBehaviour
     {
         if (firstSlot.planet != null && secondSlot.planet != null)
         {
+            CanPlanetMove = false;
             Planet firstPlanet = firstSlot.planet;
             Planet secondPlanet = secondSlot.planet;
-            //CanPlanetMove = false;
-
             if (CheckPossibleCombination(secondSlot, firstPlanet) || CheckPossibleCombination(firstSlot, secondPlanet))
             {
+                moveCounter++;
+                planetsMoveCounter[secondSlot.x, secondSlot.y] = moveCounter;
                 firstPlanet.MoveToSlot(secondSlot);
+                moveCounter++;
+                planetsMoveCounter[firstSlot.x, firstSlot.y] = moveCounter;
                 secondPlanet.MoveToSlot(firstSlot);
             }
             else
@@ -509,14 +522,25 @@ public class SlotController : MonoBehaviour
 
     private void DestroyCombination()
     {
+
+        if (combination.Count == 0)
+        {
+            CanPlanetMove = true;
+        }
+        else
+        {
+            CanPlanetMove = false;
+        }
+
         for (int i = 0; i < combination.Count; i++)
         {
             for (int j = 0; j < combination[i].Count; j++)
             {
-                Destroy(combination[i][j].planet.gameObject);
-                combination[i][j].planet = null;
+                combination[i][j].DestroyPlanetInSlot();
             }
         }
+
+        combination.Clear();
     }
 
     public void CheckFieldForCombination()
@@ -532,7 +556,7 @@ public class SlotController : MonoBehaviour
                 }
             }
         }
-        if (complite)
+        if (complite && moveComplite)
         {
             combinationFound = true;
             FindCombination();
@@ -560,7 +584,10 @@ public class SlotController : MonoBehaviour
             }
         }
 
-        combination.Clear();
+        //combination.Clear();
+
+        int minPlanetsMoveCount = 0;
+        Slot bonusSlot = slots[0,0];
 
         for (int i = 0; i < sizeField; i++)
         {
@@ -568,18 +595,70 @@ public class SlotController : MonoBehaviour
             {
                 List<Slot> combo = new List<Slot>();
                 combo = FindCombinationFromSlot(slots[i, j]);
-                if (combo.Count>=3)
-                    combination.Add(combo);
+                if (combo.Count >= 3)
+                {
+                    switch (combo.Count)
+                    {
+                        case 3:
+                            {
+                                combination.Add(combo);
+                                break;
+                            }
+                        case 4:
+                            {
+                                minPlanetsMoveCount = 0;
+                                foreach (Slot slot in combo)
+                                {
+                                    if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                    {
+                                        minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                        bonusSlot = slot;
+                                    }
+                                }
+                                combo.Remove(bonusSlot);
+                                combination.Add(combo);
+                                break;
+                            }
+                        case 5:
+                            {
+                                minPlanetsMoveCount = 0;
+                                foreach (Slot slot in combo)
+                                {
+                                    if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                    {
+                                        minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                        bonusSlot = slot;
+                                    }
+                                }
+                                combo.Remove(bonusSlot);
+                                combination.Add(combo);
+                                break;
+                            }
+                        default:
+                            {
+                                minPlanetsMoveCount = 0;
+                                foreach (Slot slot in combo)
+                                {
+                                    if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                    {
+                                        minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                        bonusSlot = slot;
+                                    }
+                                }
+                                combo.Remove(bonusSlot);
+                                combination.Add(combo);
+                                break;
+                            }
+                    }
+                }
             }
         }
 
         DestroyCombination();
 
-        CheckFieldForMove();
+        //CanPlanetMove = true;
 
-        CanPlanetMove = true;
-
-        MovePlanets();
+        moveCounter = 0;
 
         for (int i = 0; i < sizeField; i++)
         {
@@ -662,13 +741,14 @@ public class SlotController : MonoBehaviour
     }
 
     [ContextMenu("Check")]
-    void CheckFieldForMove()
+    public void CheckFieldForMove()
     {
         for (int i = 0; i < sizeField; i++)
         {
             for (int j = 0; j < sizeField; j++)
             {
                 slotHavePlanet[i, j] = slots[i, j].planet != null;
+                slotPlanetsList[i, j].Clear();
             }
         }
 
@@ -677,12 +757,14 @@ public class SlotController : MonoBehaviour
 
     bool MovePlanets()
     {
+        planetDontMoveMovePlanets = true;
         for (int j = sizeField - 1; j >= 0; j--)
         {
             for (int i = 0; i < sizeField; i++)
             {
                 if (slotPlanetsList[i, j].Count != 0)
                 {
+                    planetDontMoveMovePlanets = false;
                     moveComplite = false;
                     combinationFound = false;
                     CanPlanetMove = false;
@@ -690,13 +772,13 @@ public class SlotController : MonoBehaviour
                     {
                         if (i == slotPlanetsList[i, j][0].x || slotPlanetsList[slotPlanetsList[i, j][0].x, j].Count == 0 || (slotPlanetsList[slotPlanetsList[i, j][0].x, j].Count != 0 ? (slotPlanetsList[slotPlanetsList[i, j][0].x, j][0] != slotPlanetsList[i, j][0]) : true))
                         {
-                            if (slots[i,j].typeOfSlot != TypeOfSlot.Generator)
+                            if (slots[i, j].typeOfSlot != TypeOfSlot.Generator)
                             {
                                 if (slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet != null && slots[i, j].planet == null)
                                 {
                                     if (slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet.slot != null)
                                     {
-                                        Planet selectPlanet = slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet;
+                                        selectPlanetMovePlanets = slots[slotPlanetsList[i, j][0].x, slotPlanetsList[i, j][0].y].planet;
 
                                         if (j + 1 < sizeField)
                                         {
@@ -704,7 +786,9 @@ public class SlotController : MonoBehaviour
                                             {
                                                 if (slotPlanetsList[i, j + 1].Exists(x => x.x == i && x.y == j))
                                                 {
-                                                    selectPlanet.MoveToSlot(slots[i, j]);
+                                                    moveCounter++;
+                                                    planetsMoveCounter[i, j] = moveCounter;
+                                                    selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                     slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                     return moveComplite;
                                                 }
@@ -716,7 +800,9 @@ public class SlotController : MonoBehaviour
                                                 {
                                                     if (slotPlanetsList[i - 1, j + 1].Exists(x => x.x == i && x.y == j))
                                                     {
-                                                        selectPlanet.MoveToSlot(slots[i, j]);
+                                                        moveCounter++;
+                                                        planetsMoveCounter[i, j] = moveCounter;
+                                                        selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                         slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                         return moveComplite;
                                                     }
@@ -729,20 +815,26 @@ public class SlotController : MonoBehaviour
                                                 {
                                                     if (slotPlanetsList[i + 1, j + 1].Exists(x => x.x == i && x.y == j))
                                                     {
-                                                        selectPlanet.MoveToSlot(slots[i, j]);
+                                                        moveCounter++;
+                                                        planetsMoveCounter[i, j] = moveCounter;
+                                                        selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                         slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                         return moveComplite;
                                                     }
                                                 }
                                             }
 
-                                            selectPlanet.MoveToSlot(slots[i, j], true);
+                                            moveCounter++;
+                                            planetsMoveCounter[i, j] = moveCounter;
+                                            selectPlanetMovePlanets.MoveToSlot(slots[i, j], true);
                                             slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                             return moveComplite;
                                         }
                                         else
                                         {
-                                            selectPlanet.MoveToSlot(slots[i, j]);
+                                            moveCounter++;
+                                            planetsMoveCounter[i, j] = moveCounter;
+                                            selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                             slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                             return moveComplite;
                                         }
@@ -753,16 +845,18 @@ public class SlotController : MonoBehaviour
                             {
                                 if (slots[i, j].planet == null)
                                 {
-                                    int count = Random.Range(0, planetGenerateList.Count);
-                                    Planet selectPlanet = GeneratePlanet(planetGenerateList[count], slots[i, j]);
-                                    selectPlanet.transform.position += new Vector3(0, 1, 0);
+                                    countMovePlanets = Random.Range(0, planetGenerateList.Count);
+                                    selectPlanetMovePlanets = GeneratePlanet(planetGenerateList[countMovePlanets], slots[i, j]);
+                                    selectPlanetMovePlanets.transform.position += Vector3.up;
                                     if (j + 1 < sizeField)
                                     {
                                         if (slotPlanetsList[i, j].Count != 0)
                                         {
                                             if (slotPlanetsList[i, j].Exists(x => x.x == i && x.y == j - 1))
                                             {
-                                                selectPlanet.MoveToSlot(slots[i, j]);
+                                                moveCounter++;
+                                                planetsMoveCounter[i, j] = moveCounter;
+                                                selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                 slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                 return moveComplite;
                                             }
@@ -774,7 +868,9 @@ public class SlotController : MonoBehaviour
                                             {
                                                 if (slotPlanetsList[i - 1, j + 1].Exists(x => x.x == i && x.y == j))
                                                 {
-                                                    selectPlanet.MoveToSlot(slots[i, j]);
+                                                    moveCounter++;
+                                                    planetsMoveCounter[i, j] = moveCounter;
+                                                    selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                     slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                     return moveComplite;
                                                 }
@@ -787,20 +883,26 @@ public class SlotController : MonoBehaviour
                                             {
                                                 if (slotPlanetsList[i + 1, j + 1].Exists(x => x.x == i && x.y == j))
                                                 {
-                                                    selectPlanet.MoveToSlot(slots[i, j]);
+                                                    moveCounter++;
+                                                    planetsMoveCounter[i, j] = moveCounter;
+                                                    selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                                     slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                                     return moveComplite;
                                                 }
                                             }
                                         }
 
-                                        selectPlanet.MoveToSlot(slots[i, j], true);
+                                        moveCounter++;
+                                        planetsMoveCounter[i, j] = moveCounter;
+                                        selectPlanetMovePlanets.MoveToSlot(slots[i, j], true);
                                         slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                         return moveComplite;
                                     }
                                     else
                                     {
-                                        selectPlanet.MoveToSlot(slots[i, j]);
+                                        moveCounter++;
+                                        planetsMoveCounter[i, j] = moveCounter;
+                                        selectPlanetMovePlanets.MoveToSlot(slots[i, j]);
                                         slotPlanetsList[i, j].Remove(slotPlanetsList[i, j][0]);
                                         return moveComplite;
                                     }
@@ -809,10 +911,21 @@ public class SlotController : MonoBehaviour
                         }
                     }
                 }
+                else
+                {
+                    if (slots[i, j].planet != null)
+                    {
+                        if (slots[i, j].planet.slot != slots[i, j])
+                        {
+                            combinationFound = false;
+                            planetDontMoveMovePlanets = false;
+                        }
+                    }
+                }
             }
         }
 
-        moveComplite = true;
+        moveComplite = planetDontMoveMovePlanets;
         return moveComplite;
     }
 
@@ -821,9 +934,12 @@ public class SlotController : MonoBehaviour
     {
 
 #if UNITY_EDITOR
-        for (int i = 0; i < planetPrefabs.Count; i++)
+        if (!Application.isPlaying)
         {
-            planetPrefabs[i] = new PlanetPrefab(planetPrefabs[i], planetPrefabs[i].typeOfPlanet.ToString());
+            for (int i = 0; i < planetPrefabs.Count; i++)
+            {
+                planetPrefabs[i] = new PlanetPrefab(planetPrefabs[i], planetPrefabs[i].typeOfPlanet.ToString());
+            }
         }
 #endif    
 
@@ -831,10 +947,9 @@ public class SlotController : MonoBehaviour
 
         if (moveComplite && !combinationFound)
         {
+            CanPlanetMove = true;
             CheckFieldForCombination();
         }
-
-
     }
 }
 

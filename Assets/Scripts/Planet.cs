@@ -14,9 +14,11 @@ public class Planet : MonoBehaviour {
     [Header("Slot")]   
     public Slot slot;
 
+    public AnimationCurve curveMove;
+
     private SpriteRenderer spritePlanet;
 
-    public AnimationCurve curveMove;
+    private List<TypeOfBonus> bonuses = new List<TypeOfBonus>();
 
     private float speedMove = 0.2f;
 
@@ -24,6 +26,11 @@ public class Planet : MonoBehaviour {
 	void Start () {
         spritePlanet = GetComponent<SpriteRenderer>();
 	}
+
+    public void SetBonus(TypeOfBonus bonus)
+    {
+        bonuses.Add(bonus);
+    }
 
     public void SetSprite(Sprite sprite)
     {
