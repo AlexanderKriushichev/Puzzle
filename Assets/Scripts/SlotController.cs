@@ -42,8 +42,8 @@ public class SlotController : MonoBehaviour
     [HideInInspector]
     public Slot firstSelectSlotToExchange;
 
-    public bool _canPlanetMove = true;
-    public bool CanPlanetMove
+    private static bool _canPlanetMove = true;
+    public static bool CanPlanetMove
     {
         get
         {

@@ -102,9 +102,17 @@ public class Slot : MonoBehaviour
     public void DestroyPlanetInSlot()
     {
         DestroyEffectActivate();
-        if (planet!=null)
-            planet.ActivateBonus();
-        StartCoroutine(DestroyPlanet());
+        if (planet != null)
+        {
+            if (planet.CountBonus() != 0)
+            {
+                planet.ActivateBonus();
+            }
+            else
+            { 
+                StartCoroutine(DestroyPlanet());
+            }
+        }
     }
 
     void OnDestroy()

@@ -113,7 +113,10 @@ public class BonusController : MonoBehaviour {
 
         Transform destroyLine = Instantiate(bonusController.lineDestroyEffectPrefab, bonusController.slotController.slots[x, y].transform).transform;
         destroyLine.localPosition = Vector3.zero;
-        for (int i = 0; i < SlotController.sizeField; i++)
+
+        bonusController.slotController.slots[x, y].DestroyPlanetInSlot();
+
+        for (int i = 1; i < SlotController.sizeField; i++)
         {
             if (x - i >= 0)
             {
@@ -139,7 +142,9 @@ public class BonusController : MonoBehaviour {
         destroyLine.localEulerAngles = new Vector3(0, 0, 90);
         destroyLine.localPosition = Vector3.zero;
 
-        for (int i = 0; i < SlotController.sizeField; i++)
+        bonusController.slotController.slots[x, y].DestroyPlanetInSlot();
+
+        for (int i = 1; i < SlotController.sizeField; i++)
         {
             if (y - i >= 0)
             {
@@ -176,6 +181,8 @@ public class BonusController : MonoBehaviour {
 
         AddBoxSecondBonus(bonusController.slotController.slots[x, y]);
 
+        SlotController.CanPlanetMove = false;
+
         bonusController.slotController.slots[x, y].planet.DestroyWhenCanMove();
     }
 
@@ -185,7 +192,7 @@ public class BonusController : MonoBehaviour {
         {
             for (int j = y - 1; j <= y + 1; j++)
             {
-                if (i >= 0 && j >= 0 && i < SlotController.sizeField && j < SlotController.sizeField && (i != x || j != y))
+                if (i >= 0 && j >= 0 && i < SlotController.sizeField && j < SlotController.sizeField)
                 {
                     bonusController.slotController.slots[i, j].DestroyPlanetInSlot();
                 }
@@ -200,7 +207,7 @@ public enum TypeOfBonus
     VerticalLine,
     BoxFirst,
     BoxSecond,
-    Start
+    Star
 }
 
 [System.Serializable]

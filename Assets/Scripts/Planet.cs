@@ -72,7 +72,7 @@ public class Planet : MonoBehaviour {
             {
                 if (slot!=null)
                 {
-                    slot.slotController.CanPlanetMove = false;
+                    SlotController.CanPlanetMove = false;
                 }
             }).OnComplete(() => OnCompliteMove(slotToMove));
     }
@@ -84,14 +84,14 @@ public class Planet : MonoBehaviour {
             {
                 if (slot != null)
                 {
-                    slot.slotController.CanPlanetMove = false;
+                    SlotController.CanPlanetMove = false;
                 }
             }).OnComplete(() => transform.DOMove(slot.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(
                 delegate
                 {
                     if (slot != null)
                     {
-                        slot.slotController.CanPlanetMove = true;
+                        SlotController.CanPlanetMove = true;
                     }
                 }));
     }
@@ -114,6 +114,7 @@ public class Planet : MonoBehaviour {
 
     public void ActivateBonus()
     {
+        bonuses.Sort();
         foreach (TypeOfBonus bonus in bonuses)
         {
             if (slot != null)
@@ -121,7 +122,6 @@ public class Planet : MonoBehaviour {
                 TypeOfBonus typeBonus = bonus;
                 bonuses.Remove(bonus);
                 BonusController.ActivateBonus(slot.x, slot.y, typeOfPlanet, typeBonus);
-                ActivateBonus();
                 break;
             }
             else
@@ -131,7 +131,6 @@ public class Planet : MonoBehaviour {
                     TypeOfBonus typeBonus = bonus;
                     bonuses.Remove(bonus);
                     BonusController.ActivateBonus(slotToMove.x, slotToMove.y, typeOfPlanet, typeBonus);
-                    ActivateBonus();
                     break;
                 }
             }
@@ -151,26 +150,19 @@ public class Planet : MonoBehaviour {
 
     IEnumerator DestoyPlanetWhenCanMove()
     {
+
+        while (!SlotController.CanPlanetMove)
+        {
+            yield return null;
+        }
+
         if (slot != null)
         {
-            while (!slot.slotController.CanPlanetMove)
-            {
-                yield return null;
-            }
             slot.DestroyPlanetInSlot();
-
         }
         else
         {
-            if (slotToMove != null)
-            {
-                while (!slotToMove.slotController.CanPlanetMove)
-                {
-                    yield return null;
-                }
-            }
             slotToMove.DestroyPlanetInSlot();
-
         }
     }
 
