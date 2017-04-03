@@ -22,14 +22,29 @@ public class Planet : MonoBehaviour {
 
     private float speedMove = 0.2f;
 
+    private TypeLineBonus directionOfMove;
+
+    private Slot slotToMove;
+
 	// Use this for initialization
 	void Start () {
+        //transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 360));
         spritePlanet = GetComponent<SpriteRenderer>();
 	}
+
+    public TypeLineBonus GetDirectionOfMove()
+    {
+        return directionOfMove;
+    }
 
     public void SetBonus(TypeOfBonus bonus)
     {
         bonuses.Add(bonus);
+    }
+
+    public int CountBonus()
+    {
+        return bonuses.Count;
     }
 
     public void SetSprite(Sprite sprite)
@@ -41,6 +56,13 @@ public class Planet : MonoBehaviour {
 
     public void MoveToSlot(Slot slotToMove)
     {
+        directionOfMove = TypeLineBonus.Verical;
+
+        if (slot.x == slotToMove.x)
+            directionOfMove = TypeLineBonus.Verical;
+        if (slot.y == slotToMove.y)
+            directionOfMove = TypeLineBonus.Horizontal;
+
         if (slot != null)
             slot.planet = null;
         slot = null;
@@ -74,10 +96,11 @@ public class Planet : MonoBehaviour {
                 }));
     }
 
-    public void MoveToSlot(Slot slotToMove, bool lastSlot)
+    public void MoveToSlot(Slot _slotToMove, bool lastSlot)
     {
         slot.planet = null;
         slot = null;
+        slotToMove = _slotToMove;
         slotToMove.planet = this;
         if (lastSlot)
         {
@@ -86,6 +109,68 @@ public class Planet : MonoBehaviour {
         else
         {
             transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnComplete(() => OnCompliteMove(slotToMove));
+        }
+    }
+
+    public void ActivateBonus()
+    {
+        foreach (TypeOfBonus bonus in bonuses)
+        {
+            if (slot != null)
+            {
+                TypeOfBonus typeBonus = bonus;
+                bonuses.Remove(bonus);
+                BonusController.ActivateBonus(slot.x, slot.y, typeOfPlanet, typeBonus);
+                ActivateBonus();
+                break;
+            }
+            else
+            {
+                if (slotToMove != null)
+                {
+                    TypeOfBonus typeBonus = bonus;
+                    bonuses.Remove(bonus);
+                    BonusController.ActivateBonus(slotToMove.x, slotToMove.y, typeOfPlanet, typeBonus);
+                    ActivateBonus();
+                    break;
+                }
+            }
+        }
+    }
+
+    void OnDestroy()
+    { 
+
+        StopCoroutine(DestoyPlanetWhenCanMove());
+    }
+
+    public void DestroyWhenCanMove()
+    {
+        StartCoroutine(DestoyPlanetWhenCanMove());
+    }
+
+    IEnumerator DestoyPlanetWhenCanMove()
+    {
+        if (slot != null)
+        {
+            while (!slot.slotController.CanPlanetMove)
+            {
+                yield return null;
+            }
+            slot.DestroyPlanetInSlot();
+
+        }
+        else
+        {
+            if (slotToMove != null)
+            {
+                while (!slotToMove.slotController.CanPlanetMove)
+                {
+                    yield return null;
+                }
+            }
+            slotToMove.DestroyPlanetInSlot();
+
         }
     }
 

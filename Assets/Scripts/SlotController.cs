@@ -61,6 +61,8 @@ public class SlotController : MonoBehaviour
 
     public bool moveComplite = true;
 
+    private bool boxBonus = false;
+
     #region VariablesMovePlanets
 
     bool planetDontMoveMovePlanets = true;
@@ -186,7 +188,7 @@ public class SlotController : MonoBehaviour
     /// <param name="typeOfPlanet">Тип планеты</param>
     /// <param name="slot">Слот</param>
     /// <returns>Планета</returns>
-    private Planet GeneratePlanet(TypeOfPlanet typeOfPlanet, Slot slot)
+    public Planet GeneratePlanet(TypeOfPlanet typeOfPlanet, Slot slot)
     {
         PlanetPrefab initPlanetPrefab = planetPrefabs.Find(x => x.typeOfPlanet == typeOfPlanet);
         Planet initPlanet = Instantiate(initPlanetPrefab.prefab, slot.transform).GetComponent<Planet>();
@@ -615,22 +617,52 @@ public class SlotController : MonoBehaviour
                                         bonusSlot = slot;
                                     }
                                 }
-                                combo.Remove(bonusSlot);
+                                if (bonusSlot.planet.CountBonus() == 0)
+                                    combo.Remove(bonusSlot);
+                                BonusController.AddLineBonus(bonusSlot);
+                                bonusSlot.DestroyEffectActivate();
                                 combination.Add(combo);
                                 break;
                             }
                         case 5:
                             {
                                 minPlanetsMoveCount = 0;
-                                foreach (Slot slot in combo)
+                                boxBonus = false;
+
+                                if ((combo[0].x == combo[1].x))
                                 {
-                                    if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                    foreach (Slot slot in combo)
                                     {
-                                        minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
-                                        bonusSlot = slot;
+                                        if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                        {
+                                            minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                            bonusSlot = slot;
+                                        }
+                                        if (combo[0].x != slot.x)
+                                            boxBonus = true;
                                     }
                                 }
-                                combo.Remove(bonusSlot);
+                                else
+                                {
+                                    foreach (Slot slot in combo)
+                                    {
+                                        if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                        {
+                                            minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                            bonusSlot = slot;
+                                        }
+                                        if (combo[0].y != slot.y)
+                                            boxBonus = true;
+                                    }
+                                }
+                                
+                                if (bonusSlot.planet.CountBonus() == 0)
+                                    combo.Remove(bonusSlot);
+
+                                if (boxBonus)
+                                    BonusController.AddBoxFirstBonus(bonusSlot);
+
+                                bonusSlot.DestroyEffectActivate();
                                 combination.Add(combo);
                                 break;
                             }
@@ -646,6 +678,7 @@ public class SlotController : MonoBehaviour
                                     }
                                 }
                                 combo.Remove(bonusSlot);
+                                bonusSlot.DestroyEffectActivate();
                                 combination.Add(combo);
                                 break;
                             }

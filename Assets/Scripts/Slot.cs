@@ -15,11 +15,16 @@ public class Slot : MonoBehaviour
     [HideInInspector]
     public SlotController slotController;
 
+    public GameObject gameObj;
+
+    [Header("Effects")]
     public PlanetDestroyEffect destroyEffect;
 
     private Vector2 startPositionOfMouse;
     private Vector2 endPositionOfMouse;
     private Vector2 moveVector;
+
+    
 
     void OnMouseDown()
     {
@@ -85,13 +90,26 @@ public class Slot : MonoBehaviour
         }
     }
 
+    public void DestroyEffectActivate()
+    {
+        if (typeOfSlot != TypeOfSlot.Barrier)
+            destroyEffect.Activate();      
+    }
+
+
 
     [ContextMenu("Destroy")]
     public void DestroyPlanetInSlot()
     {
-        destroyEffect.Activate();
-
+        DestroyEffectActivate();
+        if (planet!=null)
+            planet.ActivateBonus();
         StartCoroutine(DestroyPlanet());
+    }
+
+    void OnDestroy()
+    {
+        StopCoroutine(DestroyPlanet());
     }
 
     IEnumerator DestroyPlanet()
@@ -104,6 +122,8 @@ public class Slot : MonoBehaviour
             slotController.CheckFieldForMove();
         }
     }
+
+    
 
 }
 
