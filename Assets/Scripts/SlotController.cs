@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.Events;
 
 public class SlotController : MonoBehaviour
 {
@@ -429,10 +430,10 @@ public class SlotController : MonoBehaviour
             {
                 moveCounter++;
                 planetsMoveCounter[secondSlot.x, secondSlot.y] = moveCounter;
-                firstPlanet.MoveToSlot(secondSlot);
+                firstPlanet.MoveToSlot(secondSlot, secondPlanet);
                 moveCounter++;
                 planetsMoveCounter[firstSlot.x, firstSlot.y] = moveCounter;
-                secondPlanet.MoveToSlot(firstSlot);
+                secondPlanet.MoveToSlot(firstSlot, firstPlanet);
             }
             else
             {
@@ -454,6 +455,14 @@ public class SlotController : MonoBehaviour
             return false;
         if (slot == planet)
             return false;
+
+        if (planet.CountBonus() != 0)
+        {
+            if (planet.HaveStarBonus())
+            {
+                return true;
+            }
+        }
 
         if (slot.x > 0 && slot.x < sizeField - 1)
         {
@@ -597,10 +606,20 @@ public class SlotController : MonoBehaviour
             {
                 List<Slot> combo = new List<Slot>();
                 combo = FindCombinationFromSlot(slots[i, j]);
-                if (combo.Count >= 3)
+                if (combo.Count >= 1)
                 {
                     switch (combo.Count)
                     {
+                        case 1:
+                            {
+                                combination.Add(combo);
+                                break;
+                            }
+                        case 2:
+                            {
+                                combination.Add(combo);
+                                break;
+                            }
                         case 3:
                             {
                                 combination.Add(combo);
@@ -661,6 +680,8 @@ public class SlotController : MonoBehaviour
 
                                 if (boxBonus)
                                     BonusController.AddBoxFirstBonus(bonusSlot);
+                                else
+                                    BonusController.AddStarBonus(bonusSlot);
 
                                 bonusSlot.DestroyEffectActivate();
                                 combination.Add(combo);
@@ -669,15 +690,44 @@ public class SlotController : MonoBehaviour
                         default:
                             {
                                 minPlanetsMoveCount = 0;
-                                foreach (Slot slot in combo)
+                                boxBonus = false;
+
+                                if ((combo[0].x == combo[1].x))
                                 {
-                                    if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                    foreach (Slot slot in combo)
                                     {
-                                        minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
-                                        bonusSlot = slot;
+                                        if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                        {
+                                            minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                            bonusSlot = slot;
+                                        }
+                                        if (combo[0].x != slot.x)
+                                            boxBonus = true;
                                     }
                                 }
-                                combo.Remove(bonusSlot);
+                                else
+                                {
+                                    foreach (Slot slot in combo)
+                                    {
+                                        if (planetsMoveCounter[slot.x, slot.y] >= minPlanetsMoveCount)
+                                        {
+                                            minPlanetsMoveCount = planetsMoveCounter[slot.x, slot.y];
+                                            bonusSlot = slot;
+                                        }
+                                        if (combo[0].y != slot.y)
+                                            boxBonus = true;
+                                    }
+                                }
+
+                                if (bonusSlot.planet.CountBonus() == 0)
+                                    combo.Remove(bonusSlot);
+
+                                if (boxBonus)
+                                    BonusController.AddBoxFirstBonus(bonusSlot);
+                                else
+                                    BonusController.AddStarBonus(bonusSlot);
+
+
                                 bonusSlot.DestroyEffectActivate();
                                 combination.Add(combo);
                                 break;
@@ -705,6 +755,14 @@ public class SlotController : MonoBehaviour
     List<Slot> FindCombinationFromSlot(Slot slot)
     {
         List<Slot> slotsInCombination = new List<Slot>();
+
+        if (slot.planet != null && slot.planet.HaveStarBonus() && slot.planet.typeOfPlanet != TypeOfPlanet.Star)
+        {
+            planetsAddInCombination[slot.x, slot.y] = true;
+            planetsInCombination[slot.x, slot.y] = true;
+            slotsInCombination.Add(slot);
+        }
+
         if (planetsInCombination[slot.x, slot.y] == false && slot.planet != null)
         {
             if (slot.x > 0 && slot.x < sizeField - 1)

@@ -16,7 +16,35 @@ public class Planet : MonoBehaviour {
 
     public AnimationCurve curveMove;
 
-    private SpriteRenderer spritePlanet;
+    private SpriteRenderer _spritePlanet;
+    public SpriteRenderer spritePlanet 
+    {
+        get
+        {
+            if (_spritePlanet == null)
+                _spritePlanet = GetComponent<SpriteRenderer>();
+            return _spritePlanet;
+        }
+        set
+        {
+            _spritePlanet = value;
+        }
+    }
+
+    private bool _haveArea = false;
+    public bool haveArea
+    {
+        get
+        {
+            return _haveArea;
+        }
+        set
+        {
+            _haveArea = value;
+        }
+    }
+
+    public bool dontDestroy = false;
 
     private List<TypeOfBonus> bonuses = new List<TypeOfBonus>();
 
@@ -25,6 +53,8 @@ public class Planet : MonoBehaviour {
     private TypeLineBonus directionOfMove;
 
     private Slot slotToMove;
+
+    private TypeOfBonus typeOfExPlanetBonus = TypeOfBonus.None;
 
 	// Use this for initialization
 	void Start () {
@@ -37,9 +67,43 @@ public class Planet : MonoBehaviour {
         return directionOfMove;
     }
 
+    public void SetDirectionOfMove(TypeLineBonus typeDir)
+    {
+        directionOfMove = typeDir;
+    }
+
     public void SetBonus(TypeOfBonus bonus)
     {
+        foreach (TypeOfBonus bns in bonuses)
+        {
+            if (bns == bonus)
+                return;
+        }
         bonuses.Add(bonus);
+    }
+
+    public bool HaveStarBonus()
+    {
+        foreach (TypeOfBonus bonus in bonuses)
+        {
+            if (bonus == TypeOfBonus.Star)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public bool HaveLineBonus()
+    {
+        foreach (TypeOfBonus bonus in bonuses)
+        {
+            if (bonus == TypeOfBonus.HorizontalLine || bonus == TypeOfBonus.VerticalLine)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int CountBonus()
@@ -75,6 +139,38 @@ public class Planet : MonoBehaviour {
                     SlotController.CanPlanetMove = false;
                 }
             }).OnComplete(() => OnCompliteMove(slotToMove));
+    }
+
+    public void MoveToSlot(Slot slotToMove, Planet exPlanet)
+    {
+        directionOfMove = TypeLineBonus.Verical;
+
+        if (slot.x == slotToMove.x)
+            directionOfMove = TypeLineBonus.Verical;
+        if (slot.y == slotToMove.y)
+            directionOfMove = TypeLineBonus.Horizontal;
+
+        if (slot != null)
+            slot.planet = null;
+        slot = null;
+        slotToMove.planet = this;
+        transform.DOMove(slotToMove.transform.position, speedMove).SetEase(Ease.Linear).OnUpdate(
+            delegate
+            {
+                if (slot != null)
+                {
+                    SlotController.CanPlanetMove = false;
+                }
+            }).OnComplete(delegate
+            {
+                if (HaveStarBonus())
+                {
+                    typeOfPlanet = exPlanet.typeOfPlanet;
+                    if (exPlanet.CountBonus()!=0)
+                        typeOfExPlanetBonus = exPlanet.bonuses[0];
+                }
+                OnCompliteMove(slotToMove);
+            });
     }
 
     public void ExchangePlanet(Slot slotToMove)
@@ -121,7 +217,7 @@ public class Planet : MonoBehaviour {
             {
                 TypeOfBonus typeBonus = bonus;
                 bonuses.Remove(bonus);
-                BonusController.ActivateBonus(slot.x, slot.y, typeOfPlanet, typeBonus);
+                BonusController.ActivateBonus(slot.x, slot.y, typeOfPlanet, typeBonus, typeOfExPlanetBonus);
                 break;
             }
             else
@@ -130,7 +226,7 @@ public class Planet : MonoBehaviour {
                 {
                     TypeOfBonus typeBonus = bonus;
                     bonuses.Remove(bonus);
-                    BonusController.ActivateBonus(slotToMove.x, slotToMove.y, typeOfPlanet, typeBonus);
+                    BonusController.ActivateBonus(slotToMove.x, slotToMove.y, typeOfPlanet, typeBonus, typeOfExPlanetBonus);
                     break;
                 }
             }
@@ -138,8 +234,8 @@ public class Planet : MonoBehaviour {
     }
 
     void OnDestroy()
-    { 
-
+    {
+        SlotController.CanPlanetMove = true;
         StopCoroutine(DestoyPlanetWhenCanMove());
     }
 
@@ -156,6 +252,8 @@ public class Planet : MonoBehaviour {
             yield return null;
         }
 
+        dontDestroy = false;
+        Debug.Log(1);
         if (slot != null)
         {
             slot.DestroyPlanetInSlot();
@@ -176,4 +274,4 @@ public class Planet : MonoBehaviour {
 
 }
 
-public enum TypeOfPlanet { Green, Blue, Red, White, Purple, Yellow }
+public enum TypeOfPlanet { Green, Blue, Red, White, Purple, Yellow, Star }
